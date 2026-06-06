@@ -1,107 +1,283 @@
 # LeafSense AI
 
-LeafSense AI is a production-oriented AI-powered plant disease detection and agricultural intelligence platform built from the attached project instruction document.
+LeafSense AI is an AI-powered plant disease detection and agricultural intelligence platform designed to help farmers, researchers, and agricultural professionals identify plant diseases through leaf image analysis and receive actionable recommendations.
 
-## Architecture
+---
 
-- Frontend: React, TypeScript, Vite, Tailwind CSS, shadcn-style UI primitives, Framer Motion, Zustand, Recharts, Axios, Lucide React, React Dropzone.
-- Backend: FastAPI, SQLAlchemy, Alembic-ready models, PostgreSQL, JWT auth, role-based access, Redis/Celery-ready services, OpenCV/CV modules, Gemini recommendation layer.
-- AI pipeline: dataset architecture, EfficientNet-B3 training entrypoint, dataset metadata, inference service, severity estimation, heatmap and segmentation outputs.
-- Deployment: Vercel frontend configuration, Render backend blueprint, Neon PostgreSQL-compatible database URL.
+## Features
 
-## Architectural Decisions
+* AI-powered plant disease detection
+* Disease severity estimation
+* Image preprocessing and segmentation
+* Heatmap visualization for affected regions
+* AI-assisted agricultural recommendations
+* User authentication with Google OAuth
+* Role-based access control
+* Analytics dashboard
+* Report generation and export
+* Dataset management and research tools
 
-- The provided green rounded-square LeafSense leaf logo is imported into the frontend and used across the navbar, hero, auth pages, footer, and browser favicon.
-- The dataset is intentionally optional at runtime. The repository includes dataset folders, manifests, loaders, and training scripts that validate and report missing data without failing app startup.
-- Cloud storage is abstracted behind a local-first storage service. This keeps uploaded images functional during local development while allowing S3-compatible storage to be configured later through environment variables.
-- Gemini AI is integrated through a typed service with deterministic fallback recommendations when `GEMINI_API_KEY` is not configured. No credentials are hardcoded.
+---
+
+## Technology Stack
+
+### Frontend
+
+* React
+* TypeScript
+* Vite
+* Tailwind CSS
+* Framer Motion
+* Zustand
+* Recharts
+* Axios
+* Lucide React
+* React Dropzone
+
+### Backend
+
+* FastAPI
+* SQLAlchemy
+* PostgreSQL
+* Alembic
+* JWT Authentication
+* Role-Based Access Control
+* OpenCV
+* Gemini AI Integration
+
+### AI & Computer Vision
+
+* EfficientNet-B3
+* OpenCV Image Processing
+* Disease Severity Analysis
+* Segmentation Pipeline
+* Heatmap Generation
+* Dataset Metadata Management
+
+---
+
+## Project Structure
+
+```text
+LeafSense-AI/
+├── frontend/
+├── backend/
+├── dataset/
+├── deployment/
+├── docs/
+└── tools/
+```
+
+---
 
 ## Quick Start
 
-1. Copy `.env.example` to `.env` and fill secrets.
-2. Start backend:
+### 1. Clone Repository
+
+```bash
+git clone https://github.com/samarsinha17/leafsense-ai.git
+cd leafsense-ai
+```
+
+### 2. Configure Environment Variables
+
+Copy the example files and update values:
+
+```bash
+cp .env.example .env
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
+```
+
+---
+
+## Backend Setup
 
 ```bash
 cd backend
+
 python -m venv .venv
+
+# Windows
 .venv\Scripts\activate
+
 pip install -r requirements.txt
+
 uvicorn app.main:app --reload
 ```
 
-3. Start frontend:
+Backend will run on:
+
+```text
+http://localhost:8000
+```
+
+---
+
+## Frontend Setup
 
 ```bash
 cd frontend
+
 npm install
+
 npm run dev
 ```
 
-4. Dataset preparation is available under `backend/app/training` and `dataset/`.
+Frontend will run on:
+
+```text
+http://localhost:5173
+```
+
+---
 
 ## Dataset Layout
 
 ```text
 dataset/
-  raw/
-    PlantVillage/
-    custom/
-  processed/
-    train/
-    validation/
-    test/
-  metadata/
-    labels.json
-    dataset_manifest.json
+├── raw/
+│   ├── PlantVillage/
+│   └── custom/
+├── processed/
+│   ├── train/
+│   ├── validation/
+│   └── test/
+└── metadata/
+    ├── labels.json
+    └── dataset_manifest.json
 ```
 
-The app and backend do not require dataset images to exist yet.
+The application can run without the dataset being present. Dataset files are only required for training and evaluation workflows.
+
+---
+
+## Environment Variables
+
+### Backend
+
+```text
+DATABASE_URL=
+JWT_SECRET=
+JWT_REFRESH_SECRET=
+GOOGLE_CLIENT_ID=
+OPENAI_API_KEY=
+GEMINI_API_KEY=
+BACKEND_CORS_ORIGINS=
+LEAFSENSE_MODEL_PATH=
+ADMIN_EMAILS=
+SUPABASE_URL=
+SUPABASE_ANON_KEY=
+```
+
+### Frontend
+
+```text
+VITE_API_URL=
+VITE_GOOGLE_CLIENT_ID=YOUR_GOOGLE_CLIENT_ID
+```
+
+---
 
 ## Production Deployment
 
-### Backend on Render
+### Backend (Render)
 
-Use `deployment/render.yaml` as the Render Blueprint. Configure these environment variables in Render:
-
-- `DATABASE_URL`
-- `JWT_SECRET`
-- `JWT_REFRESH_SECRET`
-- `GOOGLE_CLIENT_ID`
-- `OPENAI_API_KEY`
-- `GEMINI_API_KEY`
-- `BACKEND_CORS_ORIGINS`
-- `LEAFSENSE_MODEL_PATH`
-- `ADMIN_EMAILS`
-- `SUPABASE_URL`
-- `SUPABASE_ANON_KEY`
-
-`ADMIN_EMAILS` should stay limited to:
+Deploy the backend using the Render configuration located in:
 
 ```text
-samarsinha2517@gmail.com,yashgupta220503@gmail.com
+deployment/render.yaml
 ```
 
-The assistant calls OpenAI when `OPENAI_API_KEY` is valid and has quota. If OpenAI returns quota or billing errors, the backend returns the built-in context-aware agriculture fallback instead of a static placeholder.
+Configure all required environment variables through the Render dashboard.
 
-### Frontend on Vercel
+---
 
-Deploy the `frontend/` folder to Vercel and set:
+### Database (PostgreSQL)
+
+Compatible with:
+
+* Neon PostgreSQL
+* Supabase PostgreSQL
+* Managed PostgreSQL providers
+
+---
+
+### Frontend (Vercel)
+
+Deploy the `frontend/` directory to Vercel.
+
+Required environment variables:
 
 ```text
-VITE_API_URL=https://YOUR_RENDER_BACKEND_URL/api/v1
-VITE_GOOGLE_CLIENT_ID=381431601099-ohmmaa7bg338hvo0bimo03h7c5geh279.apps.googleusercontent.com
+VITE_API_URL=https://YOUR_BACKEND_URL/api/v1
+VITE_GOOGLE_CLIENT_ID=YOUR_GOOGLE_CLIENT_ID
 ```
 
-Also add the deployed frontend domain to backend `BACKEND_CORS_ORIGINS`, for example:
+---
+
+## Google OAuth Setup
+
+1. Create OAuth credentials in Google Cloud Console.
+2. Add your local and production domains to Authorized JavaScript Origins.
+3. Use the same Client ID in both frontend and backend configuration.
+4. Configure OAuth consent screen before production release.
+
+---
+
+## AI Recommendation Engine
+
+LeafSense AI supports integration with external AI providers through environment variables.
+
+When AI provider credentials are unavailable, the platform gracefully falls back to built-in recommendation logic to maintain core functionality.
+
+---
+
+## Security Notes
+
+Never commit:
 
 ```text
-https://YOUR_VERCEL_DOMAIN,https://YOUR_CUSTOM_DOMAIN
+.env
+backend/.env
+frontend/.env
+
+node_modules/
+frontend/dist/
+
+uploads/
+generated_reports/
+
+*.db
+*.sqlite
+*.sqlite3
+
+logs/
 ```
 
-### Google OAuth
+These files are excluded through `.gitignore`.
 
-In Google Cloud Console, add the final Vercel domain to the OAuth authorized JavaScript origins. Use the same Client ID in frontend `VITE_GOOGLE_CLIENT_ID` and backend `GOOGLE_CLIENT_ID`.
+---
 
-### Publish Safety
+## Contributors
 
-Do not commit local `.env`, SQLite databases, generated uploads, generated reports, logs, `frontend/dist`, or `frontend/node_modules`. These are ignored by `.gitignore`.
+### Project Team
+
+* Samar Sinha — Full Stack Development, AI Integration, System Design
+* Yash Gupta — Data Analysis, Research, Documentation
+
+### Academic Project
+
+LeafSense AI is being developed as a final-year B.Tech Computer Science Engineering project.
+
+---
+
+## License
+
+This project is intended for educational, research, and demonstration purposes.
+
+---
+
+## Disclaimer
+
+LeafSense AI provides AI-assisted disease detection and recommendations. Results should be validated by agricultural experts before making critical farming decisions.
