@@ -1,0 +1,39 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/*.tsbuildinfo
+
+# Backend
+backend/.venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/**/*.pyc
+backend/*.db
+backend/*.log
+backend/uploads/
+backend/reports/
+backend/backend/
+
+# Generated project-analysis artifacts
+issues2_extracted.txt
+project_issues_extracted.txt
+issues2_media/
+project_issues_media/
+project_issues_render/
+tools/PROJECT_INSTRUCTIONS_EXTRACTED.txt
+
+# Tooling
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

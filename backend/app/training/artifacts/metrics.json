@@ -1,0 +1,5 @@
+{
+  "status": "awaiting_dataset",
+  "message": "Training artifacts will be generated when dataset images are added.",
+  "model": "EfficientNet-B3"
+}
