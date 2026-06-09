@@ -39,6 +39,7 @@ class EfficientNetInferenceEngine:
         self.labels_path = self.artifact_dir / "labels.json"
         self.settings = get_settings()
         self.model_load_error: str | None = None
+        self.model_path_error: str | None = None
 
     def labels(self) -> list[str]:
         try:
@@ -66,12 +67,25 @@ class EfficientNetInferenceEngine:
     @cached_property
     def model_path(self) -> Path | None:
         for path in self._candidate_model_paths():
-            if path.exists():
+            if path.exists() and self._is_usable_model_file(path):
                 return path
         try:
-            return Path(download_model_from_hf())
-        except Exception:
+            path = Path(download_model_from_hf())
+            return path if self._is_usable_model_file(path) else None
+        except Exception as exc:
+            self.model_path_error = "".join(traceback.format_exception_only(type(exc), exc)).strip()
             return None
+
+    def _is_usable_model_file(self, path: Path) -> bool:
+        if not path.exists() or path.stat().st_size < 1024:
+            return False
+        if path.suffix.lower() == ".keras":
+            try:
+                with zipfile.ZipFile(path, "r") as archive:
+                    return "config.json" in archive.namelist()
+            except zipfile.BadZipFile:
+                return False
+        return True
 
     @cached_property
     def model(self):
@@ -146,6 +160,7 @@ class EfficientNetInferenceEngine:
             "huggingFaceModelFile": self.settings.huggingface_model_file,
             "modelLoaded": self.model is not None,
             "modelLoadError": self.model_load_error,
+            "modelPathError": self.model_path_error,
             "modelPath": str(path) if path else None,
             "usingFallbackPredictions": self.model is None or not labels,
         }
