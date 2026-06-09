@@ -67,6 +67,7 @@ class EfficientNetInferenceEngine:
             print("KERAS VERSION =", keras.__version__)
 
             model_file = download_model_from_hf()
+            print("MODEL FILE =", model_file)
             return tf.keras.models.load_model(model_file, compile=False)
 
         except Exception as e:
