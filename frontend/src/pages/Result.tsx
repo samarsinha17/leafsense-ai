@@ -22,6 +22,8 @@ export function Result() {
     : [{ label: result.diseaseName, value: result.confidenceScore }];
   const cropInfo = cropDataset.find((item) => result.cropName.toLowerCase().includes(item.crop.toLowerCase()));
   const [emailStatus, setEmailStatus] = useState("");
+  const heatmapImage = result.heatmapUrl && !result.heatmapUrl.includes("leafsense-logo.png") ? result.heatmapUrl : result.imageUrl;
+  const highlightedImage = result.highlightedUrl && !result.highlightedUrl.includes("leafsense-logo.png") ? result.highlightedUrl : result.imageUrl;
   const severityClass = result.severity === "Critical"
     ? "text-red-500"
     : result.severity === "High"
@@ -129,8 +131,8 @@ export function Result() {
         <Card>
           <img className="h-80 w-full rounded-2xl object-cover" src={result.imageUrl} alt="Uploaded leaf" />
           <div className="mt-6 grid grid-cols-2 gap-4">
-            <img className="h-40 rounded-xl object-cover" src={result.heatmapUrl ?? result.imageUrl} alt="Heatmap overlay" />
-            <img className="h-40 rounded-xl object-cover" src={result.highlightedUrl ?? result.imageUrl} alt="Highlighted disease area" />
+            <img className="h-40 rounded-xl object-cover" src={heatmapImage} alt="Heatmap overlay" />
+            <img className="h-40 rounded-xl object-cover" src={highlightedImage} alt="Highlighted disease area" />
           </div>
           <div className="my-7 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
           {cropInfo?.image ? <img className="h-56 w-full rounded-2xl object-cover" src={cropInfo.image} alt={`${cropInfo.crop} fruit`} /> : null}

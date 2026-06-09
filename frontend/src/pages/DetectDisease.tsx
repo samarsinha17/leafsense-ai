@@ -42,7 +42,13 @@ export function DetectDisease() {
       setLastPrediction(result);
       setAssistantContext(result);
     } catch {
-      const fallback = { ...demoPrediction, imageUrl: preview ?? demoPrediction.imageUrl };
+      const fallbackImage = preview ?? demoPrediction.imageUrl;
+      const fallback = {
+        ...demoPrediction,
+        imageUrl: fallbackImage,
+        heatmapUrl: fallbackImage,
+        highlightedUrl: fallbackImage,
+      };
       setLastPrediction(fallback);
       setAssistantContext(fallback);
     } finally {

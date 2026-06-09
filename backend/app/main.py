@@ -33,6 +33,11 @@ def health():
     return {"status": "healthy", "service": settings.app_name}
 
 
+@app.get("/")
+def root():
+    return {"status": "healthy", "service": settings.app_name, "docs": "/docs", "modelHealth": "/health/model"}
+
+
 @app.get("/health/model")
 def model_health():
     return EfficientNetInferenceEngine().status()

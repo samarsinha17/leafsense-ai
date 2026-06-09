@@ -1,4 +1,5 @@
 import json
+import traceback
 from functools import cached_property
 from pathlib import Path
 
@@ -35,6 +36,7 @@ class EfficientNetInferenceEngine:
         self.artifact_dir = configured if configured.exists() else Path(__file__).resolve().parent / "artifacts"
         self.labels_path = self.artifact_dir / "labels.json"
         self.settings = get_settings()
+        self.model_load_error: str | None = None
 
     def labels(self) -> list[str]:
         try:
@@ -78,7 +80,8 @@ class EfficientNetInferenceEngine:
             import tensorflow as tf
 
             return tf.keras.models.load_model(str(model_path), compile=False)
-        except Exception:
+        except Exception as exc:
+            self.model_load_error = "".join(traceback.format_exception_only(type(exc), exc)).strip()
             return None
 
     def status(self) -> dict[str, object]:
@@ -93,6 +96,7 @@ class EfficientNetInferenceEngine:
             "huggingFaceRepo": self.settings.huggingface_model_repo,
             "huggingFaceModelFile": self.settings.huggingface_model_file,
             "modelLoaded": self.model is not None,
+            "modelLoadError": self.model_load_error,
             "modelPath": str(path) if path else None,
             "usingFallbackPredictions": self.model is None or not labels,
         }
