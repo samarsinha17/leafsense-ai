@@ -6,6 +6,7 @@ import numpy as np
 from huggingface_hub import hf_hub_download
 
 from app.core.config import get_settings
+HF_REPO_ID = "samarsinha2517/leafsense-ai-model"
 
 
 class EfficientNetInferenceEngine:
