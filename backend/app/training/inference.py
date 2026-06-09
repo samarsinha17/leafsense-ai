@@ -50,13 +50,14 @@ class EfficientNetInferenceEngine:
 
     @cached_property
     def model(self):
-        if not self.model_path:
-            return None
         try:
             import tensorflow as tf
 
-            return tf.keras.models.load_model(str(self.model_path), compile=False)
-        except Exception:
+            model_file = download_model_from_hf()
+            return tf.keras.models.load_model(model_file, compile=False)
+
+        except Exception as e:
+            print(f"MODEL LOAD ERROR: {e}")
             return None
 
     @cached_property
