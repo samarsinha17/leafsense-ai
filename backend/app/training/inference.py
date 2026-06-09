@@ -61,6 +61,10 @@ class EfficientNetInferenceEngine:
     def model(self):
         try:
             import tensorflow as tf
+            import keras
+
+            print("TF VERSION =", tf.__version__)
+            print("KERAS VERSION =", keras.__version__)
 
             model_file = download_model_from_hf()
             return tf.keras.models.load_model(model_file, compile=False)
