@@ -3,21 +3,29 @@ from functools import cached_property
 from pathlib import Path
 
 import numpy as np
-from huggingface_hub import hf_hub_download
 
 from app.core.config import get_settings
-HF_REPO_ID = "samarsinha2517/leafsense-ai-model"
 
-def download_model_from_hf():
+
+def download_model_from_hf() -> str:
+    from huggingface_hub import hf_hub_download
+
+    settings = get_settings()
     return hf_hub_download(
-        repo_id=HF_REPO_ID,
-        filename="leafsense_model.keras",
+        repo_id=settings.huggingface_model_repo,
+        filename=settings.huggingface_model_file,
+        token=settings.huggingface_token,
     )
 
-def download_labels_from_hf():
+
+def download_labels_from_hf() -> str:
+    from huggingface_hub import hf_hub_download
+
+    settings = get_settings()
     return hf_hub_download(
-        repo_id=HF_REPO_ID,
-        filename="labels.json",
+        repo_id=settings.huggingface_model_repo,
+        filename=settings.huggingface_labels_file,
+        token=settings.huggingface_token,
     )
 
 
@@ -32,8 +40,9 @@ class EfficientNetInferenceEngine:
         try:
             labels_file = download_labels_from_hf()
             return json.loads(Path(labels_file).read_text(encoding="utf-8"))
-        except Exception as e:
-            print(f"LABEL LOAD ERROR: {e}")
+        except Exception:
+            if self.labels_path.exists():
+                return json.loads(self.labels_path.read_text(encoding="utf-8"))
             return []
 
     def _candidate_model_paths(self) -> list[Path]:
@@ -55,34 +64,34 @@ class EfficientNetInferenceEngine:
         for path in self._candidate_model_paths():
             if path.exists():
                 return path
-        return None
+        try:
+            return Path(download_model_from_hf())
+        except Exception:
+            return None
 
     @cached_property
     def model(self):
+        model_path = self.model_path
+        if not model_path:
+            return None
         try:
             import tensorflow as tf
-            import keras
 
-            print("TF VERSION =", tf.__version__)
-            print("KERAS VERSION =", keras.__version__)
-
-            model_file = download_model_from_hf()
-            print("MODEL FILE =", model_file)
-            raise Exception("TEST_EXCEPTION_REACHED")
-
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-            print(f"MODEL LOAD ERROR: {e}")
+            return tf.keras.models.load_model(str(model_path), compile=False)
+        except Exception:
             return None
 
     def status(self) -> dict[str, object]:
         labels = self.labels()
         path = self.model_path
+        source = "local_path" if path and self.settings.model_path and Path(self.settings.model_path) == path else "huggingface" if path else "missing"
         return {
             "labelsLoaded": bool(labels),
             "labelCount": len(labels),
             "modelConfigured": bool(self.settings.model_path),
+            "modelSource": source,
+            "huggingFaceRepo": self.settings.huggingface_model_repo,
+            "huggingFaceModelFile": self.settings.huggingface_model_file,
             "modelLoaded": self.model is not None,
             "modelPath": str(path) if path else None,
             "usingFallbackPredictions": self.model is None or not labels,

@@ -20,6 +20,14 @@ services:
         sync: false
       - key: LEAFSENSE_MODEL_PATH
         sync: false
+      - key: HUGGINGFACE_MODEL_REPO
+        value: samarsinha2517/leafsense-ai-model
+      - key: HUGGINGFACE_MODEL_FILE
+        value: leafsense_model.keras
+      - key: HUGGINGFACE_LABELS_FILE
+        value: labels.json
+      - key: HUGGINGFACE_TOKEN
+        sync: false
       - key: BACKEND_CORS_ORIGINS
         sync: false
       - key: ADMIN_EMAILS

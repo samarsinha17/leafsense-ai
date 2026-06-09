@@ -23,6 +23,10 @@ class Settings(BaseSettings):
     upload_dir: str = "backend/uploads"
     report_dir: str = "backend/reports"
     model_path: str | None = Field(default=None, alias="LEAFSENSE_MODEL_PATH")
+    huggingface_model_repo: str = Field(default="samarsinha2517/leafsense-ai-model", alias="HUGGINGFACE_MODEL_REPO")
+    huggingface_model_file: str = Field(default="leafsense_model.keras", alias="HUGGINGFACE_MODEL_FILE")
+    huggingface_labels_file: str = Field(default="labels.json", alias="HUGGINGFACE_LABELS_FILE")
+    huggingface_token: str | None = Field(default=None, alias="HUGGINGFACE_TOKEN")
     admin_emails_raw: str = Field(default="samarsinha2517@gmail.com,yashgupta220503@gmail.com", alias="ADMIN_EMAILS")
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore", populate_by_name=True)
