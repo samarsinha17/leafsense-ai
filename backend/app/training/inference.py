@@ -68,7 +68,7 @@ class EfficientNetInferenceEngine:
 
             model_file = download_model_from_hf()
             print("MODEL FILE =", model_file)
-            return tf.keras.models.load_model(model_file, compile=False)
+            raise Exception("TEST_EXCEPTION_REACHED")
 
         except Exception as e:
             import traceback
