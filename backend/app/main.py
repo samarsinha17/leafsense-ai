@@ -5,6 +5,7 @@ from app.api import api_router
 from app.api.auth.routes import router as auth_router
 from app.core.config import get_settings
 from app.database.session import Base, engine
+from app.training.inference import EfficientNetInferenceEngine
 import app.models  # noqa: F401
 from pathlib import Path
 
@@ -30,3 +31,8 @@ app.mount("/reports", StaticFiles(directory=settings.report_dir), name="reports"
 @app.get("/health")
 def health():
     return {"status": "healthy", "service": settings.app_name}
+
+
+@app.get("/health/model")
+def model_health():
+    return EfficientNetInferenceEngine().status()

@@ -76,6 +76,18 @@ class EfficientNetInferenceEngine:
             print(f"MODEL LOAD ERROR: {e}")
             return None
 
+    def status(self) -> dict[str, object]:
+        labels = self.labels()
+        path = self.model_path
+        return {
+            "labelsLoaded": bool(labels),
+            "labelCount": len(labels),
+            "modelConfigured": bool(self.settings.model_path),
+            "modelLoaded": self.model is not None,
+            "modelPath": str(path) if path else None,
+            "usingFallbackPredictions": self.model is None or not labels,
+        }
+
     @cached_property
     def input_size(self) -> tuple[int, int]:
         if self.model is None:
