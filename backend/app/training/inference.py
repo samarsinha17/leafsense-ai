@@ -1,4 +1,5 @@
 import json
+import threading
 import tempfile
 import traceback
 import zipfile
@@ -8,6 +9,10 @@ from pathlib import Path
 import numpy as np
 
 from app.core.config import get_settings
+
+
+class ModelUnavailableError(RuntimeError):
+    """Raised when real model inference is required but the model is unavailable."""
 
 
 def download_model_from_hf() -> str:
@@ -187,8 +192,11 @@ class EfficientNetInferenceEngine:
 
     def predict_top(self, image_path: str, top_k: int = 5) -> list[tuple[str, float]]:
         labels = self.labels()
-        if self.model is None or not labels:
-            return [("Tomato___Early_blight", 0.916), ("Tomato___Late_blight", 0.038), ("Tomato___healthy", 0.022)]
+        if self.model is None:
+            detail = self.model_load_error or self.model_path_error or "Model could not be loaded."
+            raise ModelUnavailableError(detail)
+        if not labels:
+            raise ModelUnavailableError("Model labels could not be loaded.")
         preds = np.asarray(self.model.predict(self._preprocess(image_path), verbose=0))[0]
         if preds.ndim != 1:
             preds = preds.reshape(-1)
@@ -204,7 +212,17 @@ class EfficientNetInferenceEngine:
         if top:
             label, confidence = top[0]
             return label, confidence
-        labels = self.labels()
-        if not labels:
-            return "Tomato___Leaf_spot", 0.916
-        return labels[0], 0.9
+        raise ModelUnavailableError("Model returned no predictions.")
+
+
+_ENGINE: EfficientNetInferenceEngine | None = None
+_ENGINE_LOCK = threading.Lock()
+
+
+def get_inference_engine() -> EfficientNetInferenceEngine:
+    global _ENGINE
+    if _ENGINE is None:
+        with _ENGINE_LOCK:
+            if _ENGINE is None:
+                _ENGINE = EfficientNetInferenceEngine()
+    return _ENGINE

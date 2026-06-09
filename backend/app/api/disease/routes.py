@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, File, Form, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 from app.api.dependencies import get_optional_user
 from app.database.session import get_db
@@ -7,6 +7,7 @@ from app.models.user import User
 from app.schemas.disease import PredictionResponse
 from app.services.prediction_service import PredictionService
 from app.services.storage_service import StorageService
+from app.training.inference import ModelUnavailableError
 
 router = APIRouter(prefix="/disease", tags=["disease"])
 
@@ -19,7 +20,13 @@ async def predict(
     user: User | None = Depends(get_optional_user),
 ):
     image_url = await StorageService().save_upload(file)
-    prediction = PredictionService().predict(image_url)
+    try:
+        prediction = PredictionService().predict(image_url)
+    except ModelUnavailableError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=f"LeafSense trained model is unavailable right now. {exc}",
+        ) from exc
     db.add(
         Scan(
             user_id=user.id if user else None,

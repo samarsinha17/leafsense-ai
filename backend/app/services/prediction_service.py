@@ -5,7 +5,7 @@ from app.schemas.disease import PredictionResponse
 from app.core.config import get_settings
 from app.cv.localization import create_disease_heatmap
 from app.services.gemini_service import GeminiRecommendationService
-from app.training.inference import EfficientNetInferenceEngine
+from app.training.inference import ModelUnavailableError, get_inference_engine
 
 
 SCIENTIFIC_NAMES = {
@@ -30,7 +30,7 @@ SCIENTIFIC_NAMES = {
 class PredictionService:
     def __init__(self) -> None:
         self.gemini = GeminiRecommendationService()
-        self.engine = EfficientNetInferenceEngine()
+        self.engine = get_inference_engine()
         self.settings = get_settings()
 
     def estimate_severity(self, infected_area: float, disease_name: str) -> str:
@@ -116,7 +116,9 @@ class PredictionService:
     def predict(self, image_url: str) -> PredictionResponse:
         image_path = self._image_path_from_url(image_url)
         top = self.engine.predict_top(str(image_path), top_k=5)
-        label, raw_confidence = top[0] if top else ("Tomato___Early_blight", 0.916)
+        if not top:
+            raise ModelUnavailableError("Model returned no predictions.")
+        label, raw_confidence = top[0]
         crop_name, disease_name, disease_category = self._clean_label(label)
         confidence = round(raw_confidence * 100, 2)
         infected_area = self._estimate_infected_area(image_path, disease_name)
