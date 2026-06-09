@@ -1,5 +1,7 @@
 import json
+import tempfile
 import traceback
+import zipfile
 from functools import cached_property
 from pathlib import Path
 
@@ -76,13 +78,60 @@ class EfficientNetInferenceEngine:
         model_path = self.model_path
         if not model_path:
             return None
+        errors: list[str] = []
         try:
             import tensorflow as tf
 
             return tf.keras.models.load_model(str(model_path), compile=False)
         except Exception as exc:
-            self.model_load_error = "".join(traceback.format_exception_only(type(exc), exc)).strip()
-            return None
+            errors.append(f"direct_load: {''.join(traceback.format_exception_only(type(exc), exc)).strip()}")
+        try:
+            import tensorflow as tf
+
+            sanitized_path = self._sanitized_keras_path(model_path)
+            return tf.keras.models.load_model(str(sanitized_path), compile=False, safe_mode=False)
+        except Exception as exc:
+            errors.append(f"sanitized_load: {''.join(traceback.format_exception_only(type(exc), exc)).strip()}")
+        try:
+            model = self._reconstructed_efficientnet_model()
+            model.load_weights(str(model_path))
+            return model
+        except Exception as exc:
+            errors.append(f"reconstructed_weights: {''.join(traceback.format_exception_only(type(exc), exc)).strip()}")
+        self.model_load_error = " | ".join(errors)
+        return None
+
+    def _strip_unsupported_config(self, value):
+        if isinstance(value, dict):
+            return {key: self._strip_unsupported_config(item) for key, item in value.items() if key != "quantization_config"}
+        if isinstance(value, list):
+            return [self._strip_unsupported_config(item) for item in value]
+        return value
+
+    def _sanitized_keras_path(self, model_path: Path) -> Path:
+        target = Path(tempfile.gettempdir()) / f"{model_path.stem}-leafsense-sanitized.keras"
+        if target.exists() and target.stat().st_mtime >= model_path.stat().st_mtime:
+            return target
+        with zipfile.ZipFile(model_path, "r") as source, zipfile.ZipFile(target, "w", compression=zipfile.ZIP_DEFLATED) as destination:
+            for info in source.infolist():
+                content = source.read(info.filename)
+                if info.filename == "config.json":
+                    config = json.loads(content.decode("utf-8"))
+                    content = json.dumps(self._strip_unsupported_config(config)).encode("utf-8")
+                destination.writestr(info, content)
+        return target
+
+    def _reconstructed_efficientnet_model(self):
+        import tensorflow as tf
+
+        inputs = tf.keras.Input(shape=(300, 300, 3), name="input_layer_1")
+        base = tf.keras.applications.EfficientNetB3(include_top=False, weights=None, input_tensor=inputs)
+        x = tf.keras.layers.GlobalAveragePooling2D(name="global_average_pooling2d")(base.output)
+        x = tf.keras.layers.Dropout(0.3, name="dropout")(x)
+        x = tf.keras.layers.Dense(256, activation="relu", name="dense")(x)
+        x = tf.keras.layers.Dropout(0.2, name="dropout_1")(x)
+        outputs = tf.keras.layers.Dense(len(self.labels()) or 39, activation="softmax", name="dense_1")(x)
+        return tf.keras.Model(inputs=inputs, outputs=outputs, name="sequential")
 
     def status(self) -> dict[str, object]:
         labels = self.labels()
