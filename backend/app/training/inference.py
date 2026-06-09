@@ -29,9 +29,12 @@ class EfficientNetInferenceEngine:
         self.settings = get_settings()
 
     def labels(self) -> list[str]:
-        if not self.labels_path.exists():
+        try:
+            labels_file = download_labels_from_hf()
+            return json.loads(Path(labels_file).read_text(encoding="utf-8"))
+        except Exception as e:
+            print(f"LABEL LOAD ERROR: {e}")
             return []
-        return json.loads(self.labels_path.read_text(encoding="utf-8"))
 
     def _candidate_model_paths(self) -> list[Path]:
         candidates: list[Path] = []
