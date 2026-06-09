@@ -3,6 +3,7 @@ from functools import cached_property
 from pathlib import Path
 
 import numpy as np
+from huggingface_hub import hf_hub_download
 
 from app.core.config import get_settings
 
