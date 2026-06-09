@@ -71,6 +71,8 @@ class EfficientNetInferenceEngine:
             return tf.keras.models.load_model(model_file, compile=False)
 
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             print(f"MODEL LOAD ERROR: {e}")
             return None
 
