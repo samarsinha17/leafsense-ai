@@ -16,7 +16,7 @@ celery==5.4.0
 opencv-python-headless==4.10.0.84
 numpy==1.26.4
 pandas==2.2.3
-tensorflow-cpu==2.16.2
+tensorflow-cpu==2.20.0
 pillow==11.0.0
 reportlab==4.2.5
 pytest==8.3.4
