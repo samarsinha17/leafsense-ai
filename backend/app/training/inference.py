@@ -14,6 +14,12 @@ def download_model_from_hf():
         filename="leafsense_model.keras",
     )
 
+def download_labels_from_hf():
+    return hf_hub_download(
+        repo_id=HF_REPO_ID,
+        filename="labels.json",
+    )
+
 
 class EfficientNetInferenceEngine:
     def __init__(self, artifact_dir: str = "backend/app/training/artifacts") -> None:
