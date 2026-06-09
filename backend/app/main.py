@@ -39,5 +39,5 @@ def root():
 
 
 @app.get("/health/model")
-def model_health():
-    return EfficientNetInferenceEngine().status()
+def model_health(load: bool = False):
+    return EfficientNetInferenceEngine().status(load_model=load)

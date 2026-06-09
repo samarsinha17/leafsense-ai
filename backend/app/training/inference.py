@@ -89,6 +89,9 @@ class EfficientNetInferenceEngine:
 
     @cached_property
     def model(self):
+        if not self.settings.enable_model_inference:
+            self.model_load_error = "Model inference is disabled. Set ENABLE_MODEL_INFERENCE=true on a Render plan with enough memory to load TensorFlow EfficientNet."
+            return None
         model_path = self.model_path
         if not model_path:
             return None
@@ -147,22 +150,24 @@ class EfficientNetInferenceEngine:
         outputs = tf.keras.layers.Dense(len(self.labels()) or 39, activation="softmax", name="dense_1")(x)
         return tf.keras.Model(inputs=inputs, outputs=outputs, name="sequential")
 
-    def status(self) -> dict[str, object]:
+    def status(self, load_model: bool = False) -> dict[str, object]:
         labels = self.labels()
         path = self.model_path
         source = "local_path" if path and self.settings.model_path and Path(self.settings.model_path) == path else "huggingface" if path else "missing"
+        model = self.model if load_model else None
         return {
             "labelsLoaded": bool(labels),
             "labelCount": len(labels),
             "modelConfigured": bool(self.settings.model_path),
+            "modelInferenceEnabled": self.settings.enable_model_inference,
             "modelSource": source,
             "huggingFaceRepo": self.settings.huggingface_model_repo,
             "huggingFaceModelFile": self.settings.huggingface_model_file,
-            "modelLoaded": self.model is not None,
+            "modelLoaded": model is not None,
             "modelLoadError": self.model_load_error,
             "modelPathError": self.model_path_error,
             "modelPath": str(path) if path else None,
-            "usingFallbackPredictions": self.model is None or not labels,
+            "usingFallbackPredictions": not self.settings.enable_model_inference or model is None or not labels,
         }
 
     @cached_property

@@ -28,8 +28,10 @@ services:
         value: labels.json
       - key: HUGGINGFACE_TOKEN
         sync: false
+      - key: ENABLE_MODEL_INFERENCE
+        value: false
       - key: BACKEND_CORS_ORIGINS
-        sync: false
+        value: https://leafsense-ai-plum.vercel.app,http://localhost:5173,http://127.0.0.1:5173
       - key: ADMIN_EMAILS
         sync: false
       - key: GOOGLE_CLIENT_ID

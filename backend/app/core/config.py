@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     smtp_email: str | None = None
     smtp_password: str | None = None
     redis_url: str = "redis://localhost:6379/0"
-    backend_cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
+    backend_cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173,https://leafsense-ai-plum.vercel.app"
     upload_dir: str = "backend/uploads"
     report_dir: str = "backend/reports"
     model_path: str | None = Field(default=None, alias="LEAFSENSE_MODEL_PATH")
@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     huggingface_model_file: str = Field(default="leafsense_model.keras", alias="HUGGINGFACE_MODEL_FILE")
     huggingface_labels_file: str = Field(default="labels.json", alias="HUGGINGFACE_LABELS_FILE")
     huggingface_token: str | None = Field(default=None, alias="HUGGINGFACE_TOKEN")
+    enable_model_inference: bool = Field(default=False, alias="ENABLE_MODEL_INFERENCE")
     admin_emails_raw: str = Field(default="samarsinha2517@gmail.com,yashgupta220503@gmail.com", alias="ADMIN_EMAILS")
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore", populate_by_name=True)
