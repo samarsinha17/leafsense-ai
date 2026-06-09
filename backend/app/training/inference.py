@@ -1,4 +1,7 @@
 import json
+import os
+import subprocess
+import sys
 import threading
 import tempfile
 import traceback
@@ -45,6 +48,41 @@ class EfficientNetInferenceEngine:
         self.settings = get_settings()
         self.model_load_error: str | None = None
         self.model_path_error: str | None = None
+
+    def _uses_model_worker(self) -> bool:
+        return self.settings.isolate_model_inference and os.getenv("LEAFSENSE_MODEL_WORKER") != "1"
+
+    def _run_worker(self, mode: str, *args: str) -> dict:
+        command = [sys.executable, "-m", "app.training.model_worker", mode, *args]
+        env = os.environ.copy()
+        env["LEAFSENSE_MODEL_WORKER"] = "1"
+        try:
+            completed = subprocess.run(
+                command,
+                cwd=str(Path(__file__).resolve().parents[2]),
+                env=env,
+                capture_output=True,
+                text=True,
+                timeout=self.settings.model_worker_timeout_seconds,
+                check=False,
+            )
+        except subprocess.TimeoutExpired as exc:
+            raise ModelUnavailableError(
+                f"Model worker timed out after {self.settings.model_worker_timeout_seconds} seconds."
+            ) from exc
+        stderr = completed.stderr.strip()
+        stdout = completed.stdout.strip()
+        if completed.returncode != 0:
+            detail = stderr[-1200:] if stderr else f"worker exited with code {completed.returncode}"
+            raise ModelUnavailableError(detail)
+        try:
+            payload = json.loads(stdout)
+        except json.JSONDecodeError as exc:
+            detail = stderr[-1200:] if stderr else stdout[-1200:] or "worker returned invalid JSON"
+            raise ModelUnavailableError(detail) from exc
+        if not payload.get("ok", False):
+            raise ModelUnavailableError(str(payload.get("error") or "Model worker failed."))
+        return payload
 
     def labels(self) -> list[str]:
         try:
@@ -159,17 +197,30 @@ class EfficientNetInferenceEngine:
         labels = self.labels()
         path = self.model_path
         source = "local_path" if path and self.settings.model_path and Path(self.settings.model_path) == path else "huggingface" if path else "missing"
-        model = self.model if load_model else None
+        model = None
+        worker_error = None
+        if load_model:
+            if self._uses_model_worker():
+                try:
+                    worker_status = self._run_worker("status")["status"]
+                    return worker_status
+                except ModelUnavailableError as exc:
+                    worker_error = str(exc)
+                    self.model_load_error = worker_error
+            else:
+                model = self.model
         return {
             "labelsLoaded": bool(labels),
             "labelCount": len(labels),
             "modelConfigured": bool(self.settings.model_path),
             "modelInferenceEnabled": self.settings.enable_model_inference,
+            "modelInferenceIsolated": self.settings.isolate_model_inference,
             "modelSource": source,
             "huggingFaceRepo": self.settings.huggingface_model_repo,
             "huggingFaceModelFile": self.settings.huggingface_model_file,
             "modelLoaded": model is not None,
             "modelLoadError": self.model_load_error,
+            "modelWorkerError": worker_error,
             "modelPathError": self.model_path_error,
             "modelPath": str(path) if path else None,
             "usingFallbackPredictions": not self.settings.enable_model_inference or model is None or not labels,
@@ -191,6 +242,9 @@ class EfficientNetInferenceEngine:
         return np.expand_dims(array, axis=0)
 
     def predict_top(self, image_path: str, top_k: int = 5) -> list[tuple[str, float]]:
+        if self._uses_model_worker():
+            payload = self._run_worker("predict", image_path, str(top_k))
+            return [(str(label), float(score)) for label, score in payload["predictions"]]
         labels = self.labels()
         if self.model is None:
             detail = self.model_load_error or self.model_path_error or "Model could not be loaded."

@@ -28,6 +28,8 @@ class Settings(BaseSettings):
     huggingface_labels_file: str = Field(default="labels.json", alias="HUGGINGFACE_LABELS_FILE")
     huggingface_token: str | None = Field(default=None, alias="HUGGINGFACE_TOKEN")
     enable_model_inference: bool = Field(default=False, alias="ENABLE_MODEL_INFERENCE")
+    isolate_model_inference: bool = Field(default=True, alias="ISOLATE_MODEL_INFERENCE")
+    model_worker_timeout_seconds: int = Field(default=180, alias="MODEL_WORKER_TIMEOUT_SECONDS")
     admin_emails_raw: str = Field(default="samarsinha2517@gmail.com,yashgupta220503@gmail.com", alias="ADMIN_EMAILS")
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore", populate_by_name=True)
