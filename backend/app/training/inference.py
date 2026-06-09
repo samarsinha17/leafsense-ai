@@ -8,6 +8,12 @@ from huggingface_hub import hf_hub_download
 from app.core.config import get_settings
 HF_REPO_ID = "samarsinha2517/leafsense-ai-model"
 
+def download_model_from_hf():
+    return hf_hub_download(
+        repo_id=HF_REPO_ID,
+        filename="leafsense_model.keras",
+    )
+
 
 class EfficientNetInferenceEngine:
     def __init__(self, artifact_dir: str = "backend/app/training/artifacts") -> None:
