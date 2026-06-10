@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { predictDisease } from "../services/api";
-import { demoPrediction } from "../services/mock";
 import { useAppStore } from "../store/useAppStore";
 import { supportedCrops } from "../data/content";
 
@@ -15,6 +14,7 @@ export function DetectDisease() {
   const [rotation, setRotation] = useState(0);
   const [zoom, setZoom] = useState(1);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisError, setAnalysisError] = useState("");
   const [cropHint, setCropHint] = useState("Auto detect");
   const setLastPrediction = useAppStore((state) => state.setLastPrediction);
   const setAssistantContext = useAppStore((state) => state.setAssistantContext);
@@ -37,23 +37,18 @@ export function DetectDisease() {
   async function analyze() {
     if (!file) return;
     setIsAnalyzing(true);
+    setAnalysisError("");
     try {
       const result = await predictDisease(file, cropHint);
       setLastPrediction(result);
       setAssistantContext(result);
+      navigate("/result");
     } catch {
-      const fallbackImage = preview ?? demoPrediction.imageUrl;
-      const fallback = {
-        ...demoPrediction,
-        imageUrl: fallbackImage,
-        heatmapUrl: fallbackImage,
-        highlightedUrl: fallbackImage,
-      };
-      setLastPrediction(fallback);
-      setAssistantContext(fallback);
+      setLastPrediction(null);
+      setAssistantContext(null);
+      setAnalysisError("The trained disease model is unavailable right now. Please try again after the backend finishes loading, or select a crop and retry.");
     } finally {
       setIsAnalyzing(false);
-      navigate("/result");
     }
   }
 
@@ -104,6 +99,11 @@ export function DetectDisease() {
             <Button variant="secondary" onClick={() => { setFile(null); setPreview(null); setZoom(1); setRotation(0); }}>Reset</Button>
             <Button disabled={!file || isAnalyzing} onClick={analyze}><ScanLine size={17} /> {isAnalyzing ? "Analyzing..." : "Analyze Plant"}</Button>
             </div>
+            {analysisError ? (
+              <div className="rounded-2xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-300">
+                {analysisError}
+              </div>
+            ) : null}
           </div>
         </Card>
         <div className="grid gap-5">

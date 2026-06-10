@@ -1,4 +1,5 @@
 import json
+import base64
 import os
 import subprocess
 import sys
@@ -83,6 +84,76 @@ class EfficientNetInferenceEngine:
         if not payload.get("ok", False):
             raise ModelUnavailableError(str(payload.get("error") or "Model worker failed."))
         return payload
+
+    def _space_endpoint_url(self) -> str | None:
+        if not self.settings.huggingface_space_url:
+            return None
+        base_url = self.settings.huggingface_space_url.rstrip("/")
+        endpoint = self.settings.huggingface_space_endpoint.strip() or "/predict"
+        return f"{base_url}/{endpoint.lstrip('/')}"
+
+    def _predict_top_from_space(self, image_path: str, top_k: int) -> list[tuple[str, float]]:
+        endpoint = self._space_endpoint_url()
+        if not endpoint:
+            raise ModelUnavailableError("Hugging Face Space URL is not configured.")
+        try:
+            import httpx
+
+            headers = {}
+            if self.settings.huggingface_token:
+                headers["Authorization"] = f"Bearer {self.settings.huggingface_token}"
+            path = Path(image_path)
+            with path.open("rb") as handle:
+                files = {"file": (path.name, handle, "application/octet-stream")}
+                response = httpx.post(endpoint, files=files, data={"top_k": str(top_k)}, headers=headers, timeout=120)
+            if response.status_code == 404 and self.settings.huggingface_space_endpoint == "/predict":
+                response = self._predict_top_from_gradio_space(path, top_k, headers)
+            response.raise_for_status()
+            return self._parse_space_predictions(response.json(), top_k)
+        except ModelUnavailableError:
+            raise
+        except Exception as exc:
+            raise ModelUnavailableError(
+                f"Hugging Face Space inference failed: {''.join(traceback.format_exception_only(type(exc), exc)).strip()}"
+            ) from exc
+
+    def _predict_top_from_gradio_space(self, image_path: Path, top_k: int, headers: dict[str, str]):
+        import httpx
+
+        assert self.settings.huggingface_space_url is not None
+        mime = "image/png" if image_path.suffix.lower() == ".png" else "image/jpeg"
+        encoded = base64.b64encode(image_path.read_bytes()).decode("ascii")
+        payload = {"data": [f"data:{mime};base64,{encoded}", top_k]}
+        return httpx.post(
+            f"{self.settings.huggingface_space_url.rstrip('/')}/run/predict",
+            json=payload,
+            headers=headers,
+            timeout=120,
+        )
+
+    def _parse_space_predictions(self, payload: object, top_k: int) -> list[tuple[str, float]]:
+        data = payload
+        if isinstance(payload, dict):
+            data = payload.get("predictions") or payload.get("topPredictions") or payload.get("data") or payload
+        if isinstance(data, list) and len(data) == 1 and isinstance(data[0], list):
+            data = data[0]
+        predictions: list[tuple[str, float]] = []
+        if isinstance(data, dict):
+            for label, score in data.items():
+                predictions.append((str(label), float(score)))
+        elif isinstance(data, list):
+            for item in data:
+                if isinstance(item, dict):
+                    label = item.get("label") or item.get("class") or item.get("disease") or item.get("name")
+                    score = item.get("score") or item.get("confidence") or item.get("value") or item.get("probability")
+                    if label is not None and score is not None:
+                        predictions.append((str(label), float(score)))
+                elif isinstance(item, (list, tuple)) and len(item) >= 2:
+                    predictions.append((str(item[0]), float(item[1])))
+        if not predictions:
+            raise ModelUnavailableError("Hugging Face Space returned no usable predictions.")
+        normalized = [(label, score / 100 if score > 1 else score) for label, score in predictions]
+        return sorted(normalized, key=lambda item: item[1], reverse=True)[:top_k]
 
     def labels(self) -> list[str]:
         try:
@@ -195,12 +266,22 @@ class EfficientNetInferenceEngine:
 
     def status(self, load_model: bool = False) -> dict[str, object]:
         labels = self.labels()
-        path = self.model_path
-        source = "local_path" if path and self.settings.model_path and Path(self.settings.model_path) == path else "huggingface" if path else "missing"
+        path = None if self.settings.huggingface_space_url else self.model_path
+        source = (
+            "huggingface_space"
+            if self.settings.huggingface_space_url
+            else "local_path"
+            if path and self.settings.model_path and Path(self.settings.model_path) == path
+            else "huggingface"
+            if path
+            else "missing"
+        )
         model = None
         worker_error = None
         if load_model:
-            if self._uses_model_worker():
+            if self.settings.huggingface_space_url:
+                model = object()
+            elif self._uses_model_worker():
                 try:
                     worker_status = self._run_worker("status")["status"]
                     return worker_status
@@ -218,6 +299,8 @@ class EfficientNetInferenceEngine:
             "modelSource": source,
             "huggingFaceRepo": self.settings.huggingface_model_repo,
             "huggingFaceModelFile": self.settings.huggingface_model_file,
+            "huggingFaceSpaceUrl": self.settings.huggingface_space_url,
+            "huggingFaceSpaceEndpoint": self.settings.huggingface_space_endpoint,
             "modelLoaded": model is not None,
             "modelLoadError": self.model_load_error,
             "modelWorkerError": worker_error,
@@ -242,6 +325,8 @@ class EfficientNetInferenceEngine:
         return np.expand_dims(array, axis=0)
 
     def predict_top(self, image_path: str, top_k: int = 5) -> list[tuple[str, float]]:
+        if self.settings.huggingface_space_url:
+            return self._predict_top_from_space(image_path, top_k)
         if self._uses_model_worker():
             payload = self._run_worker("predict", image_path, str(top_k))
             return [(str(label), float(score)) for label, score in payload["predictions"]]

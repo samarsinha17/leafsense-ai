@@ -4,7 +4,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { cropDataset } from "../data/content";
-import { demoPrediction } from "../services/mock";
 import { sendGmailContact } from "../services/api";
 import { useAppStore } from "../store/useAppStore";
 import { recordLocalReport } from "../utils/localReports";
@@ -13,15 +12,34 @@ import { exportDiagnosticCsv, exportDiagnosticPdf } from "../utils/reportExport"
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 export function Result() {
-  const result = useAppStore((state) => state.lastPrediction) ?? demoPrediction;
+  const storedResult = useAppStore((state) => state.lastPrediction);
   const setAssistantContext = useAppStore((state) => state.setAssistantContext);
   const navigate = useNavigate();
+  const [emailStatus, setEmailStatus] = useState("");
+  if (!storedResult) {
+    return (
+      <section className="mx-auto max-w-3xl px-6 py-16 lg:px-8">
+        <Card>
+          <p className="text-sm font-bold uppercase tracking-[0.18em] text-primary">No Diagnostic Result</p>
+          <h1 className="mt-3 font-heading text-3xl font-bold">Run a real leaf analysis first</h1>
+          <p className="mt-3 text-muted">
+            No valid model result is available for this session. The app will not show demo disease data as a real diagnosis.
+          </p>
+          <div className="mt-6">
+            <Button onClick={() => navigate("/detect")}>
+              <PlusCircle size={17} /> Start New Scan
+            </Button>
+          </div>
+        </Card>
+      </section>
+    );
+  }
+  const result = storedResult;
   const recommendation = result.recommendation;
   const topPredictions = result.topPredictions?.length
     ? result.topPredictions
     : [{ label: result.diseaseName, value: result.confidenceScore }];
   const cropInfo = cropDataset.find((item) => result.cropName.toLowerCase().includes(item.crop.toLowerCase()));
-  const [emailStatus, setEmailStatus] = useState("");
   const heatmapImage = result.heatmapUrl && !result.heatmapUrl.includes("leafsense-logo.png") ? result.heatmapUrl : result.imageUrl;
   const highlightedImage = result.highlightedUrl && !result.highlightedUrl.includes("leafsense-logo.png") ? result.highlightedUrl : result.imageUrl;
   const severityClass = result.severity === "Critical"

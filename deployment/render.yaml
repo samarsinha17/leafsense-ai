@@ -28,6 +28,10 @@ services:
         value: labels.json
       - key: HUGGINGFACE_TOKEN
         sync: false
+      - key: HUGGINGFACE_SPACE_URL
+        sync: false
+      - key: HUGGINGFACE_SPACE_ENDPOINT
+        value: /predict
       - key: ENABLE_MODEL_INFERENCE
         sync: false
       - key: ISOLATE_MODEL_INFERENCE

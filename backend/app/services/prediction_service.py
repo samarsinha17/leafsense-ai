@@ -94,6 +94,24 @@ class PredictionService:
             rows.append({"label": f"{crop} {disease}", "value": round(score * 100, 2)})
         return rows
 
+    def _normalize_crop_hint(self, crop_hint: str | None) -> str | None:
+        if not crop_hint or crop_hint.strip().lower() in {"auto detect", "auto", "plantvillage crops"}:
+            return None
+        return crop_hint.strip().lower().replace(" ", "_")
+
+    def _filter_by_crop_hint(self, top: list[tuple[str, float]], crop_hint: str | None) -> list[tuple[str, float]]:
+        normalized_hint = self._normalize_crop_hint(crop_hint)
+        if not normalized_hint:
+            return top
+        filtered: list[tuple[str, float]] = []
+        for label, score in top:
+            crop, _, _ = self._clean_label(label)
+            if crop.lower().replace(" ", "_") == normalized_hint:
+                filtered.append((label, score))
+        if not filtered:
+            raise ModelUnavailableError(f"No prediction class matched the selected crop hint: {crop_hint}.")
+        return filtered
+
     def _make_visualizations(self, image_path: Path, image_url: str) -> tuple[str, str]:
         try:
             import cv2
@@ -113,9 +131,12 @@ class PredictionService:
         except Exception:
             return image_url, image_url
 
-    def predict(self, image_url: str) -> PredictionResponse:
+    def predict(self, image_url: str, crop_hint: str | None = None) -> PredictionResponse:
         image_path = self._image_path_from_url(image_url)
-        top = self.engine.predict_top(str(image_path), top_k=5)
+        requested_crop = self._normalize_crop_hint(crop_hint)
+        top_k = 39 if requested_crop else 5
+        top = self.engine.predict_top(str(image_path), top_k=top_k)
+        top = self._filter_by_crop_hint(top, crop_hint)[:5]
         if not top:
             raise ModelUnavailableError("Model returned no predictions.")
         label, raw_confidence = top[0]

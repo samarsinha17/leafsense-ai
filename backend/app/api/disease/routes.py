@@ -21,7 +21,7 @@ async def predict(
 ):
     image_url = await StorageService().save_upload(file)
     try:
-        prediction = PredictionService().predict(image_url)
+        prediction = PredictionService().predict(image_url, crop_hint=cropHint)
     except ModelUnavailableError as exc:
         raise HTTPException(
             status_code=503,
