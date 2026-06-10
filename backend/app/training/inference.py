@@ -123,7 +123,7 @@ class EfficientNetInferenceEngine:
         assert self.settings.huggingface_space_url is not None
         mime = "image/png" if image_path.suffix.lower() == ".png" else "image/jpeg"
         encoded = base64.b64encode(image_path.read_bytes()).decode("ascii")
-        payload = {"data": [f"data:{mime};base64,{encoded}", top_k]}
+        payload = {"data": [f"data:{mime};base64,{encoded}"]}
         return httpx.post(
             f"{self.settings.huggingface_space_url.rstrip('/')}/run/predict",
             json=payload,
