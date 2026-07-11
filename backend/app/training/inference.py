@@ -218,7 +218,6 @@ class EfficientNetInferenceEngine:
         return sorted(normalized, key=lambda item: item[1], reverse=True)[:top_k]
 
     def labels(self) -> list[str]:
-        # Prefer local labels file so we always match the locally installed model
         if self.labels_path.exists():
             return json.loads(self.labels_path.read_text(encoding="utf-8"))
         try:
@@ -226,7 +225,6 @@ class EfficientNetInferenceEngine:
             return json.loads(Path(labels_file).read_text(encoding="utf-8"))
         except Exception:
             return []
-
 
     def _candidate_model_paths(self) -> list[Path]:
         candidates: list[Path] = []
@@ -236,8 +234,6 @@ class EfficientNetInferenceEngine:
             [
                 self.artifact_dir / "leafsense_model.keras",
                 Path("backend/app/training/artifacts/leafsense_model.keras"),
-                Path.home() / "Downloads" / "leafsense_model.keras",
-                Path(r"C:\Users\ASUS\Downloads\leafsense_model.keras"),
             ]
         )
         return candidates
@@ -385,7 +381,7 @@ class EfficientNetInferenceEngine:
         height, width = self.input_size
         image = Image.open(image_path).convert("RGB").resize((width, height))
         array = np.asarray(image, dtype=np.float32)
-        return np.expand_dims(array / 255.0, axis=0)
+        return np.expand_dims(array, axis=0)
 
     def predict_top(self, image_path: str, top_k: int = 5) -> list[tuple[str, float]]:
         if self.model is not None:

@@ -15,7 +15,7 @@ export function DetectDisease() {
   const [zoom, setZoom] = useState(1);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState("");
-  const [cropHint, setCropHint] = useState("");
+  const [cropHint, setCropHint] = useState("Auto detect");
   const setLastPrediction = useAppStore((state) => state.setLastPrediction);
   const setAssistantContext = useAppStore((state) => state.setAssistantContext);
   const navigate = useNavigate();
@@ -36,10 +36,6 @@ export function DetectDisease() {
 
   async function analyze() {
     if (!file) return;
-    if (!cropHint) {
-      setAnalysisError("Please select a crop before analyzing the leaf image.");
-      return;
-    }
     setIsAnalyzing(true);
     setAnalysisError("");
     try {
@@ -93,9 +89,7 @@ export function DetectDisease() {
                 value={cropHint}
                 onChange={(event) => setCropHint(event.target.value)}
               >
-                <option value="" disabled>
-                  Select crop
-                </option>
+              <option>Auto detect</option>
                 {supportedCrops.filter((crop) => crop !== "PlantVillage crops").map((crop) => <option key={crop}>{crop}</option>)}
               </select>
             </div>
@@ -103,7 +97,7 @@ export function DetectDisease() {
             <Button variant="secondary" onClick={() => setRotation((value) => value + 90)}><RotateCcw size={17} /> Rotate</Button>
             <Button variant="secondary" onClick={() => setZoom((value) => Math.min(value + 0.1, 1.6))}><ZoomIn size={17} /> Zoom</Button>
             <Button variant="secondary" onClick={() => { setFile(null); setPreview(null); setZoom(1); setRotation(0); }}>Reset</Button>
-            <Button disabled={!file || !cropHint || isAnalyzing} onClick={analyze}><ScanLine size={17} /> {isAnalyzing ? "Analyzing..." : "Analyze Plant"}</Button>
+            <Button disabled={!file || isAnalyzing} onClick={analyze}><ScanLine size={17} /> {isAnalyzing ? "Analyzing..." : "Analyze Plant"}</Button>
             </div>
             {analysisError ? (
               <div className="rounded-2xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-300">
