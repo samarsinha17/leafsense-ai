@@ -7,6 +7,8 @@ import threading
 import tempfile
 import traceback
 import zipfile
+import time
+import uuid
 from functools import cached_property
 from pathlib import Path
 
@@ -89,8 +91,70 @@ class EfficientNetInferenceEngine:
         if not self.settings.huggingface_space_url:
             return None
         base_url = self.settings.huggingface_space_url.rstrip("/")
-        endpoint = self.settings.huggingface_space_endpoint.strip() or "/predict"
+        endpoint = self.settings.huggingface_space_endpoint.strip() or "/gradio_api/call/predict"
         return f"{base_url}/{endpoint.lstrip('/')}"
+
+    def _space_upload_url(self) -> str:
+        if not self.settings.huggingface_space_url:
+            raise ModelUnavailableError("Hugging Face Space URL is not configured.")
+        return f"{self.settings.huggingface_space_url.rstrip('/')}/gradio_api/upload"
+
+    def _space_event_url(self, endpoint: str, event_id: str) -> str:
+        return f"{self.settings.huggingface_space_url.rstrip('/')}/gradio_api/call/{endpoint}/{event_id}"
+
+    def _upload_to_space(self, image_path: Path) -> str:
+        try:
+            import httpx
+
+            suffix = image_path.suffix.lower()
+            mime = "image/png" if suffix == ".png" else "image/jpeg"
+            with image_path.open("rb") as handle:
+                files = {"files": (image_path.name, handle.read(), mime)}
+                response = httpx.post(self._space_upload_url(), files=files, timeout=120)
+            response.raise_for_status()
+            uploaded = response.json()
+            if isinstance(uploaded, list) and uploaded:
+                return str(uploaded[0])
+            raise ModelUnavailableError("Hugging Face upload endpoint returned no file path.")
+        except ModelUnavailableError:
+            raise
+        except Exception as exc:
+            raise ModelUnavailableError(
+                f"Hugging Face upload failed: {''.join(traceback.format_exception_only(type(exc), exc)).strip()}"
+            ) from exc
+
+    def _poll_space_event(self, endpoint: str, event_id: str, headers: dict[str, str]) -> object:
+        try:
+            import httpx
+
+            deadline = time.monotonic() + 180
+            event_url = self._space_event_url(endpoint, event_id)
+            while time.monotonic() < deadline:
+                response = httpx.get(event_url, headers=headers, timeout=30)
+                response.raise_for_status()
+                text = response.text.strip()
+                if text:
+                    last_json = None
+                    for line in text.splitlines():
+                        if not line.startswith("data:"):
+                            continue
+                        payload = line.removeprefix("data:").strip()
+                        if payload == "[DONE]":
+                            return last_json if last_json is not None else {}
+                        try:
+                            last_json = json.loads(payload)
+                        except json.JSONDecodeError:
+                            continue
+                    if last_json is not None:
+                        return last_json
+                time.sleep(1.5)
+            raise ModelUnavailableError("Timed out waiting for Hugging Face Space prediction.")
+        except ModelUnavailableError:
+            raise
+        except Exception as exc:
+            raise ModelUnavailableError(
+                f"Hugging Face Space polling failed: {''.join(traceback.format_exception_only(type(exc), exc)).strip()}"
+            ) from exc
 
     def _predict_top_from_space(self, image_path: str, top_k: int) -> list[tuple[str, float]]:
         endpoint = self._space_endpoint_url()
@@ -103,11 +167,23 @@ class EfficientNetInferenceEngine:
             if self.settings.huggingface_token:
                 headers["Authorization"] = f"Bearer {self.settings.huggingface_token}"
             path = Path(image_path)
+            if endpoint.endswith("/gradio_api/call/predict"):
+                uploaded_path = self._upload_to_space(path)
+                response = httpx.post(
+                    endpoint,
+                    json={"data": [{"path": uploaded_path, "meta": {"_type": "gradio.FileData"}}]},
+                    headers=headers,
+                    timeout=120,
+                )
+                response.raise_for_status()
+                event_id = response.json().get("event_id")
+                if not event_id:
+                    raise ModelUnavailableError("Hugging Face Space did not return an event id.")
+                payload = self._poll_space_event("predict", event_id, headers)
+                return self._parse_space_predictions(payload, top_k)
             with path.open("rb") as handle:
                 files = {"file": (path.name, handle, "application/octet-stream")}
                 response = httpx.post(endpoint, files=files, data={"top_k": str(top_k)}, headers=headers, timeout=120)
-            if response.status_code == 404 and self.settings.huggingface_space_endpoint == "/predict":
-                response = self._predict_top_from_gradio_space(path, top_k, headers)
             response.raise_for_status()
             return self._parse_space_predictions(response.json(), top_k)
         except ModelUnavailableError:
@@ -116,20 +192,6 @@ class EfficientNetInferenceEngine:
             raise ModelUnavailableError(
                 f"Hugging Face Space inference failed: {''.join(traceback.format_exception_only(type(exc), exc)).strip()}"
             ) from exc
-
-    def _predict_top_from_gradio_space(self, image_path: Path, top_k: int, headers: dict[str, str]):
-        import httpx
-
-        assert self.settings.huggingface_space_url is not None
-        mime = "image/png" if image_path.suffix.lower() == ".png" else "image/jpeg"
-        encoded = base64.b64encode(image_path.read_bytes()).decode("ascii")
-        payload = {"data": [f"data:{mime};base64,{encoded}"]}
-        return httpx.post(
-            f"{self.settings.huggingface_space_url.rstrip('/')}/run/predict",
-            json=payload,
-            headers=headers,
-            timeout=120,
-        )
 
     def _parse_space_predictions(self, payload: object, top_k: int) -> list[tuple[str, float]]:
         data = payload
@@ -255,7 +317,7 @@ class EfficientNetInferenceEngine:
     def _reconstructed_efficientnet_model(self):
         import tensorflow as tf
 
-        inputs = tf.keras.Input(shape=(300, 300, 3), name="input_layer_1")
+        inputs = tf.keras.Input(shape=(224, 224, 3), name="input_layer_1")
         base = tf.keras.applications.EfficientNetB3(include_top=False, weights=None, input_tensor=inputs)
         x = tf.keras.layers.GlobalAveragePooling2D(name="global_average_pooling2d")(base.output)
         x = tf.keras.layers.Dropout(0.3, name="dropout")(x)
@@ -312,9 +374,9 @@ class EfficientNetInferenceEngine:
     @cached_property
     def input_size(self) -> tuple[int, int]:
         if self.model is None:
-            return (300, 300)
+            return (224, 224)
         shape = self.model.input_shape
-        return (int(shape[1] or 300), int(shape[2] or 300))
+        return (int(shape[1] or 224), int(shape[2] or 224))
 
     def _preprocess(self, image_path: str) -> np.ndarray:
         from PIL import Image
@@ -322,7 +384,7 @@ class EfficientNetInferenceEngine:
         height, width = self.input_size
         image = Image.open(image_path).convert("RGB").resize((width, height))
         array = np.asarray(image, dtype=np.float32)
-        return np.expand_dims(array, axis=0)
+        return np.expand_dims(array / 255.0, axis=0)
 
     def predict_top(self, image_path: str, top_k: int = 5) -> list[tuple[str, float]]:
         if self.settings.huggingface_space_url:

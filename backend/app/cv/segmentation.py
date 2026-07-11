@@ -1,8 +1,9 @@
-import cv2
 import numpy as np
 
 
 def segment_leaf(image: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    import cv2
+
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     lower_green = np.array([25, 20, 20])
     upper_green = np.array([100, 255, 255])

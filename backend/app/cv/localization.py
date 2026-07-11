@@ -1,8 +1,9 @@
-import cv2
 import numpy as np
 
 
 def create_disease_heatmap(image: np.ndarray, mask: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    import cv2
+
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     edges = cv2.Canny(gray, 80, 160)
     affected = cv2.bitwise_and(edges, edges, mask=mask)

@@ -29,9 +29,9 @@ services:
       - key: HUGGINGFACE_TOKEN
         sync: false
       - key: HUGGINGFACE_SPACE_URL
-        sync: false
+        value: https://samarsinha2517-leafsense-ai-model.hf.space
       - key: HUGGINGFACE_SPACE_ENDPOINT
-        value: /predict
+        value: /gradio_api/call/predict
       - key: ENABLE_MODEL_INFERENCE
         sync: false
       - key: ISOLATE_MODEL_INFERENCE
