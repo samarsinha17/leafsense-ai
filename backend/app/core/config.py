@@ -1,5 +1,6 @@
 from functools import lru_cache
 from pydantic import Field
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -35,6 +36,28 @@ class Settings(BaseSettings):
     admin_emails_raw: str = Field(default="samarsinha2517@gmail.com,yashgupta220503@gmail.com", alias="ADMIN_EMAILS")
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore", populate_by_name=True)
+
+    @field_validator("huggingface_space_endpoint", mode="before")
+    @classmethod
+    def normalize_huggingface_space_endpoint(cls, value: str | None) -> str:
+        endpoint = (value or "/gradio_api/call/predict").strip()
+        if endpoint in {"/predict", "/run/predict"}:
+            return "/gradio_api/call/predict"
+        return endpoint
+
+    @field_validator("huggingface_space_url", mode="before")
+    @classmethod
+    def normalize_huggingface_space_url(cls, value: str | None) -> str | None:
+        if not value:
+            return value
+        normalized = value.strip().rstrip("/")
+        # Keep this narrowly scoped to the known typo observed in the deployed env.
+        if "samarsinha17-leafsense-ai-model.hf.space" in normalized:
+            normalized = normalized.replace(
+                "samarsinha17-leafsense-ai-model.hf.space",
+                "samarsinha2517-leafsense-ai-model.hf.space",
+            )
+        return normalized
 
     @property
     def cors_origins(self) -> list[str]:

@@ -33,9 +33,19 @@ def health():
     return {"status": "healthy", "service": settings.app_name}
 
 
+@app.head("/health")
+def health_head():
+    return {}
+
+
 @app.get("/")
 def root():
     return {"status": "healthy", "service": settings.app_name, "docs": "/docs", "modelHealth": "/health/model"}
+
+
+@app.head("/")
+def root_head():
+    return {}
 
 
 @app.get("/health/model")
