@@ -325,22 +325,20 @@ class EfficientNetInferenceEngine:
 
     def status(self, load_model: bool = False) -> dict[str, object]:
         labels = self.labels()
-        path = None if self.settings.huggingface_space_url else self.model_path
+        path = self.model_path
         source = (
-            "huggingface_space"
-            if self.settings.huggingface_space_url
-            else "local_path"
+            "local_path"
             if path and self.settings.model_path and Path(self.settings.model_path) == path
             else "huggingface"
             if path
+            else "huggingface_space"
+            if self.settings.huggingface_space_url
             else "missing"
         )
         model = None
         worker_error = None
         if load_model:
-            if self.settings.huggingface_space_url:
-                model = object()
-            elif self._uses_model_worker():
+            if self._uses_model_worker():
                 try:
                     worker_status = self._run_worker("status")["status"]
                     return worker_status
