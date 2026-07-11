@@ -265,11 +265,10 @@ class EfficientNetInferenceEngine:
 
     @cached_property
     def model(self):
-        if not self.settings.enable_model_inference:
-            self.model_load_error = "Model inference is disabled. Set ENABLE_MODEL_INFERENCE=true on a Render plan with enough memory to load TensorFlow EfficientNet."
-            return None
         model_path = self.model_path
         if not model_path:
+            if not self.settings.enable_model_inference:
+                self.model_load_error = "Model inference is disabled. Set ENABLE_MODEL_INFERENCE=true on a Render plan with enough memory to load TensorFlow EfficientNet."
             return None
         errors: list[str] = []
         try:
@@ -387,17 +386,30 @@ class EfficientNetInferenceEngine:
         return np.expand_dims(array / 255.0, axis=0)
 
     def predict_top(self, image_path: str, top_k: int = 5) -> list[tuple[str, float]]:
-        if self.settings.huggingface_space_url:
-            return self._predict_top_from_space(image_path, top_k)
+        if self.model is not None:
+            labels = self.labels()
+            if not labels:
+                raise ModelUnavailableError("Model labels could not be loaded.")
+            preds = np.asarray(self.model.predict(self._preprocess(image_path), verbose=0))[0]
+            if preds.ndim != 1:
+                preds = preds.reshape(-1)
+            if preds.max(initial=0) > 1 or not np.isclose(float(preds.sum()), 1.0, atol=0.05):
+                exp = np.exp(preds - np.max(preds))
+                preds = exp / exp.sum()
+            limit = min(top_k, len(preds), len(labels))
+            indexes = np.argsort(preds)[::-1][:limit]
+            return [(labels[int(index)], float(preds[int(index)])) for index in indexes]
         if self._uses_model_worker():
             payload = self._run_worker("predict", image_path, str(top_k))
             return [(str(label), float(score)) for label, score in payload["predictions"]]
+        if self.settings.huggingface_space_url:
+            return self._predict_top_from_space(image_path, top_k)
         labels = self.labels()
+        if not labels:
+            raise ModelUnavailableError("Model labels could not be loaded.")
         if self.model is None:
             detail = self.model_load_error or self.model_path_error or "Model could not be loaded."
             raise ModelUnavailableError(detail)
-        if not labels:
-            raise ModelUnavailableError("Model labels could not be loaded.")
         preds = np.asarray(self.model.predict(self._preprocess(image_path), verbose=0))[0]
         if preds.ndim != 1:
             preds = preds.reshape(-1)

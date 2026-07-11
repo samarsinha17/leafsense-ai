@@ -22,7 +22,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-export async function predictDisease(file: File, cropHint = "Auto detect"): Promise<PredictionResult> {
+export async function predictDisease(file: File, cropHint: string): Promise<PredictionResult> {
   const body = new FormData();
   body.append("file", file);
   body.append("cropHint", cropHint);

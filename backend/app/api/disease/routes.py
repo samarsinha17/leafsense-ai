@@ -19,9 +19,15 @@ async def predict(
     db: Session = Depends(get_db),
     user: User | None = Depends(get_optional_user),
 ):
+    normalized_crop = (cropHint or "").strip()
+    if not normalized_crop or normalized_crop.lower() in {"auto detect", "autodetect", "auto"}:
+        raise HTTPException(
+            status_code=400,
+            detail="Please select a crop before running disease detection.",
+        )
     image_url = await StorageService().save_upload(file)
     try:
-        prediction = PredictionService().predict(image_url, crop_hint=cropHint)
+        prediction = PredictionService().predict(image_url, crop_hint=normalized_crop)
     except ModelUnavailableError as exc:
         raise HTTPException(
             status_code=503,
