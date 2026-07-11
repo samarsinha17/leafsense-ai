@@ -33,7 +33,7 @@ services:
       - key: HUGGINGFACE_SPACE_ENDPOINT
         value: /predict
       - key: ENABLE_MODEL_INFERENCE
-        value: true
+        value: false
       - key: ISOLATE_MODEL_INFERENCE
         value: true
       - key: MODEL_WORKER_TIMEOUT_SECONDS

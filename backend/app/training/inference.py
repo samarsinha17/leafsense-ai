@@ -325,20 +325,22 @@ class EfficientNetInferenceEngine:
 
     def status(self, load_model: bool = False) -> dict[str, object]:
         labels = self.labels()
-        path = self.model_path
+        path = None if self.settings.huggingface_space_url else self.model_path
         source = (
-            "local_path"
+            "huggingface_space"
+            if self.settings.huggingface_space_url
+            else "local_path"
             if path and self.settings.model_path and Path(self.settings.model_path) == path
             else "huggingface"
             if path
-            else "huggingface_space"
-            if self.settings.huggingface_space_url
             else "missing"
         )
         model = None
         worker_error = None
         if load_model:
-            if self._uses_model_worker():
+            if self.settings.huggingface_space_url:
+                model = object()
+            elif self._uses_model_worker():
                 try:
                     worker_status = self._run_worker("status")["status"]
                     return worker_status
@@ -382,6 +384,8 @@ class EfficientNetInferenceEngine:
         return np.expand_dims(array, axis=0)
 
     def predict_top(self, image_path: str, top_k: int = 5) -> list[tuple[str, float]]:
+        if self.settings.huggingface_space_url:
+            return self._predict_top_from_space(image_path, top_k)
         if self.model is not None:
             labels = self.labels()
             if not labels:
@@ -398,8 +402,6 @@ class EfficientNetInferenceEngine:
         if self._uses_model_worker():
             payload = self._run_worker("predict", image_path, str(top_k))
             return [(str(label), float(score)) for label, score in payload["predictions"]]
-        if self.settings.huggingface_space_url:
-            return self._predict_top_from_space(image_path, top_k)
         labels = self.labels()
         if not labels:
             raise ModelUnavailableError("Model labels could not be loaded.")
