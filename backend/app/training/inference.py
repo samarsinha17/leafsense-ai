@@ -218,13 +218,15 @@ class EfficientNetInferenceEngine:
         return sorted(normalized, key=lambda item: item[1], reverse=True)[:top_k]
 
     def labels(self) -> list[str]:
+        # Prefer local labels file so we always match the locally installed model
+        if self.labels_path.exists():
+            return json.loads(self.labels_path.read_text(encoding="utf-8"))
         try:
             labels_file = download_labels_from_hf()
             return json.loads(Path(labels_file).read_text(encoding="utf-8"))
         except Exception:
-            if self.labels_path.exists():
-                return json.loads(self.labels_path.read_text(encoding="utf-8"))
             return []
+
 
     def _candidate_model_paths(self) -> list[Path]:
         candidates: list[Path] = []
