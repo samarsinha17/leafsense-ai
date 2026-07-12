@@ -1,17 +1,21 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { BarChart3, Bot, Download, FileText, LogOut, Menu, Moon, Settings, ShieldCheck, Sprout, Sun, UserCircle, X } from "lucide-react";
+import { BarChart3, Bot, ChevronDown, Download, FileText, Languages, LogOut, Menu, Moon, Settings, ShieldCheck, Sprout, Sun, UserCircle, X } from "lucide-react";
 import { navItems } from "../../data/content";
+import { languageLabels, translate } from "../../data/translations";
 import { getProfile } from "../../services/api";
 import { useAppStore } from "../../store/useAppStore";
 import { Logo } from "../Logo";
 import { Button } from "../ui/Button";
 
 export function Navbar() {
-  const { theme, toggleTheme, user, setUser } = useAppStore();
+  const { theme, toggleTheme, user, setUser, language, setLanguage } = useAppStore();
   const [open, setOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [languageOpen, setLanguageOpen] = useState(false);
   const location = useLocation();
+  const t = (key: string) => translate(language, key);
+
   useEffect(() => {
     if (!localStorage.getItem("leafsense-access-token") || user) return;
     getProfile().then(setUser).catch(() => {
@@ -27,11 +31,46 @@ export function Navbar() {
     return () => window.removeEventListener("click", close);
   }, [profileOpen]);
 
+  useEffect(() => {
+    if (!languageOpen) return;
+    const close = () => setLanguageOpen(false);
+    window.addEventListener("click", close);
+    return () => window.removeEventListener("click", close);
+  }, [languageOpen]);
+
   const visibleNavItems = user
     ? user.role === "admin"
       ? [...navItems, { label: "Admin", path: "/admin" }]
       : navItems
     : navItems.filter((item) => item.path === "/");
+
+  const navLabel = (label: string) => {
+    switch (label) {
+      case "Home":
+        return t("home");
+      case "Detect Disease":
+        return t("detectDisease");
+      case "Dashboard":
+        return t("dashboard");
+      case "Dataset":
+        return t("dataset");
+      case "Analytics":
+        return t("analytics");
+      case "Model":
+        return t("model");
+      case "Assistant":
+        return t("assistant");
+      case "Research":
+        return t("research");
+      case "Team":
+        return t("team");
+      case "Contact":
+        return t("contact");
+      default:
+        return label;
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem("leafsense-access-token");
     localStorage.removeItem("leafsense-refresh-token");
@@ -55,7 +94,7 @@ export function Navbar() {
                 return `whitespace-nowrap text-xs font-medium transition-colors 2xl:text-sm ${active ? "text-primary" : "text-muted hover:text-foreground"}`;
               }}
             >
-              {item.label}
+              {navLabel(item.label)}
             </NavLink>
           ))}
         </div>
@@ -74,6 +113,37 @@ export function Navbar() {
           >
             {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
           </button>
+          <div className="relative">
+            <button
+              aria-label="Language selector"
+              className="glass-card inline-flex h-10 items-center gap-2 rounded-full px-3 text-sm font-semibold text-foreground transition hover:border-primary"
+              onClick={(event) => {
+                event.stopPropagation();
+                setLanguageOpen((current) => !current);
+              }}
+            >
+              <Languages size={17} />
+              <span className="hidden sm:inline">{languageLabels[language]}</span>
+              <ChevronDown size={14} className="text-muted" />
+            </button>
+            {languageOpen ? (
+              <div className="absolute right-0 mt-3 w-44 overflow-hidden rounded-2xl border border-border bg-card shadow-2xl" onClick={(event) => event.stopPropagation()}>
+                {(["en", "hi", "hinglish"] as const).map((option) => (
+                  <button
+                    key={option}
+                    className={`flex w-full items-center justify-between px-4 py-3 text-left text-sm transition hover:bg-primary/10 hover:text-primary ${language === option ? "bg-primary/10 text-primary" : "text-foreground"}`}
+                    onClick={() => {
+                      setLanguage(option);
+                      setLanguageOpen(false);
+                    }}
+                  >
+                    <span>{languageLabels[option]}</span>
+                    {language === option ? <span className="text-xs font-bold">•</span> : null}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
           {user ? (
             <div className="relative">
               <button
@@ -136,10 +206,10 @@ export function Navbar() {
           ) : (
             <>
               <Link className="hidden text-sm font-semibold text-muted transition hover:text-primary sm:inline" to="/login">
-                Login
+                {language === "hi" ? "Login" : language === "hinglish" ? "Login" : "Login"}
               </Link>
               <Link to="/signup">
-                <Button className="px-5 py-2.5">Signup</Button>
+                <Button className="px-5 py-2.5">{language === "hi" ? "Signup" : language === "hinglish" ? "Signup" : "Signup"}</Button>
               </Link>
             </>
           )}
@@ -158,7 +228,7 @@ export function Navbar() {
                   return `rounded-xl px-3 py-2 font-medium transition-colors ${active ? "bg-primary/10 text-primary" : "text-muted hover:bg-primary/10 hover:text-foreground"}`;
                 }}
               >
-                {item.label}
+                {navLabel(item.label)}
               </NavLink>
             ))}
           </div>

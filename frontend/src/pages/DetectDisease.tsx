@@ -1,12 +1,13 @@
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
-import { Camera, Crop, FolderOpen, RotateCcw, ScanLine, UploadCloud, ZoomIn } from "lucide-react";
+import { Camera, ChevronDown, Crop, FolderOpen, RotateCcw, ScanLine, UploadCloud, ZoomIn } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { predictDisease } from "../services/api";
 import { useAppStore } from "../store/useAppStore";
 import { supportedCrops } from "../data/content";
+import { languageLabels, translate } from "../data/translations";
 
 export function DetectDisease() {
   const [file, setFile] = useState<File | null>(null);
@@ -15,10 +16,12 @@ export function DetectDisease() {
   const [zoom, setZoom] = useState(1);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState("");
-  const [cropHint, setCropHint] = useState("Auto detect");
+  const [cropHint, setCropHint] = useState("auto");
+  const language = useAppStore((state) => state.language);
   const setLastPrediction = useAppStore((state) => state.setLastPrediction);
   const setAssistantContext = useAppStore((state) => state.setAssistantContext);
   const navigate = useNavigate();
+  const t = (key: string) => translate(language, key);
 
   const onDrop = useCallback((files: File[]) => {
     const selected = files[0];
@@ -39,14 +42,14 @@ export function DetectDisease() {
     setIsAnalyzing(true);
     setAnalysisError("");
     try {
-      const result = await predictDisease(file, cropHint);
+      const result = await predictDisease(file, cropHint === "auto" ? "Auto detect" : cropHint);
       setLastPrediction(result);
       setAssistantContext(result);
       navigate("/result");
     } catch {
       setLastPrediction(null);
       setAssistantContext(null);
-      setAnalysisError("The trained disease model is unavailable right now. Please try again after the backend finishes loading, or select a crop and retry.");
+      setAnalysisError(t("invalidImage"));
     } finally {
       setIsAnalyzing(false);
     }
@@ -71,33 +74,36 @@ export function DetectDisease() {
             ) : (
               <div>
                 <UploadCloud className="mx-auto text-primary" size={56} />
-                <h1 className="mt-6 font-heading text-3xl font-bold">Upload Plant Image</h1>
-                <p className="mt-3 text-muted">Drop the image here, click this box, or use Browse. JPG, PNG, JPEG, and WEBP are supported.</p>
-                <p className="mt-4 rounded-full bg-primary/10 px-4 py-2 text-sm font-semibold text-primary">Drag image directly into this upload area</p>
+                <h1 className="mt-6 font-heading text-3xl font-bold">{t("uploadPlantImage")}</h1>
+                <p className="mt-3 text-muted">{t("uploadHelp")}</p>
+                <p className="mt-4 rounded-full bg-primary/10 px-4 py-2 text-sm font-semibold text-primary">{t("dragHint")}</p>
               </div>
             )}
           </div>
           <div className="mt-6 grid gap-4">
             <div className="flex flex-wrap gap-3">
-              <Button variant="secondary" type="button" onClick={(event) => { event.stopPropagation(); open(); }}><FolderOpen size={17} /> Browse</Button>
+              <Button variant="secondary" type="button" onClick={(event) => { event.stopPropagation(); open(); }}><FolderOpen size={17} /> {t("browse")}</Button>
               <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border border-border bg-card/70 px-6 py-3 text-sm font-semibold transition hover:border-primary/70 hover:text-primary">
-                <Camera size={17} /> Camera
+                <Camera size={17} /> {t("camera")}
                 <input className="hidden" type="file" accept="image/*" capture="environment" onChange={(event) => onDrop(Array.from(event.target.files ?? []))} />
               </label>
-              <select
-                className="rounded-full border border-border bg-card px-5 py-3 text-sm font-semibold outline-none focus:border-primary"
-                value={cropHint}
-                onChange={(event) => setCropHint(event.target.value)}
-              >
-              <option>Auto detect</option>
-                {supportedCrops.filter((crop) => crop !== "PlantVillage crops").map((crop) => <option key={crop}>{crop}</option>)}
-              </select>
+              <div className="relative">
+                <select
+                  className="appearance-none rounded-full border border-border bg-card px-5 py-3 pr-10 text-sm font-semibold outline-none transition focus:border-primary"
+                  value={cropHint}
+                  onChange={(event) => setCropHint(event.target.value)}
+                >
+                  <option value="auto">{t("autoDetect")}</option>
+                  {supportedCrops.filter((crop) => crop !== "PlantVillage crops").map((crop) => <option key={crop} value={crop}>{crop}</option>)}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted" size={16} />
+              </div>
             </div>
             <div className="flex flex-wrap gap-3">
-            <Button variant="secondary" onClick={() => setRotation((value) => value + 90)}><RotateCcw size={17} /> Rotate</Button>
-            <Button variant="secondary" onClick={() => setZoom((value) => Math.min(value + 0.1, 1.6))}><ZoomIn size={17} /> Zoom</Button>
-            <Button variant="secondary" onClick={() => { setFile(null); setPreview(null); setZoom(1); setRotation(0); }}>Reset</Button>
-            <Button disabled={!file || isAnalyzing} onClick={analyze}><ScanLine size={17} /> {isAnalyzing ? "Analyzing..." : "Analyze Plant"}</Button>
+            <Button variant="secondary" onClick={() => setRotation((value) => value + 90)}><RotateCcw size={17} /> {t("rotate")}</Button>
+            <Button variant="secondary" onClick={() => setZoom((value) => Math.min(value + 0.1, 1.6))}><ZoomIn size={17} /> {t("zoom")}</Button>
+            <Button variant="secondary" onClick={() => { setFile(null); setPreview(null); setZoom(1); setRotation(0); }}>{t("reset")}</Button>
+            <Button disabled={!file || isAnalyzing} onClick={analyze}><ScanLine size={17} /> {isAnalyzing ? t("analyzing") : t("analyzePlant")}</Button>
             </div>
             {analysisError ? (
               <div className="rounded-2xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-300">
@@ -114,8 +120,8 @@ export function DetectDisease() {
                   <ScanLine className="animate-pulse" />
                 </div>
                 <div>
-                  <h2 className="font-heading text-xl font-bold">Running deep inference...</h2>
-                  <p className="text-sm text-muted">Preprocessing image, loading EfficientNet-B3, and preparing recommendations.</p>
+                  <h2 className="font-heading text-xl font-bold">{t("runningInference")}</h2>
+                  <p className="text-sm text-muted">{t("runningSubtext")}</p>
                 </div>
               </div>
               <div className="mt-5 h-3 overflow-hidden rounded-full bg-primary/10">
@@ -125,18 +131,18 @@ export function DetectDisease() {
           ) : null}
           <Card>
             <Crop className="text-primary" />
-            <h2 className="mt-4 font-heading text-2xl font-bold">Supported Crop Types</h2>
+            <h2 className="mt-4 font-heading text-2xl font-bold">{t("supportedCropTypes")}</h2>
             <div className="mt-4 flex flex-wrap gap-2">
               {supportedCrops.map((crop) => <span className="rounded-full bg-primary/10 px-3 py-1 text-sm text-primary" key={crop}>{crop}</span>)}
             </div>
           </Card>
           <Card>
-            <h2 className="font-heading text-2xl font-bold">Detection Guidelines</h2>
+            <h2 className="font-heading text-2xl font-bold">{t("detectionGuidelines")}</h2>
             <ul className="mt-4 space-y-3 text-sm text-muted">
-              <li>Use one clear leaf image with visible symptoms.</li>
-              <li>Avoid motion blur, extreme shadows, and very low resolution.</li>
-              <li>Crop or zoom to keep the leaf as the main subject.</li>
-              <li>Image validation and compression run before backend analysis.</li>
+              <li>{t("guideline1")}</li>
+              <li>{t("guideline2")}</li>
+              <li>{t("guideline3")}</li>
+              <li>{t("guideline4")}</li>
             </ul>
           </Card>
         </div>
