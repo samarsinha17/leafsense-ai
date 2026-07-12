@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     huggingface_labels_file: str = Field(default="labels.json", alias="HUGGINGFACE_LABELS_FILE")
     huggingface_token: str | None = Field(default=None, alias="HUGGINGFACE_TOKEN")
     huggingface_space_url: str | None = Field(default=None, alias="HUGGINGFACE_SPACE_URL")
-    huggingface_space_endpoint: str = Field(default="/gradio_api/call/predict", alias="HUGGINGFACE_SPACE_ENDPOINT")
+    huggingface_space_endpoint: str = Field(default="/predict", alias="HUGGINGFACE_SPACE_ENDPOINT")
     enable_model_inference: bool = Field(default=False, alias="ENABLE_MODEL_INFERENCE")
     isolate_model_inference: bool = Field(default=True, alias="ISOLATE_MODEL_INFERENCE")
     model_worker_timeout_seconds: int = Field(default=180, alias="MODEL_WORKER_TIMEOUT_SECONDS")
@@ -40,9 +40,9 @@ class Settings(BaseSettings):
     @field_validator("huggingface_space_endpoint", mode="before")
     @classmethod
     def normalize_huggingface_space_endpoint(cls, value: str | None) -> str:
-        endpoint = (value or "/gradio_api/call/predict").strip()
-        if endpoint in {"/predict", "/run/predict"}:
-            return "/gradio_api/call/predict"
+        endpoint = (value or "/predict").strip()
+        if not endpoint.startswith("/"):
+            endpoint = f"/{endpoint}"
         return endpoint
 
     @field_validator("huggingface_space_url", mode="before")

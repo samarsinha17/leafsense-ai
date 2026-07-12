@@ -91,7 +91,7 @@ class EfficientNetInferenceEngine:
         if not self.settings.huggingface_space_url:
             return None
         base_url = self.settings.huggingface_space_url.rstrip("/")
-        endpoint = self.settings.huggingface_space_endpoint.strip() or "/gradio_api/call/predict"
+        endpoint = self.settings.huggingface_space_endpoint.strip() or "/predict"
         return f"{base_url}/{endpoint.lstrip('/')}"
 
     def _space_upload_url(self) -> str:
@@ -352,7 +352,7 @@ class EfficientNetInferenceEngine:
         return {
             "labelsLoaded": bool(labels),
             "labelCount": len(labels),
-            "modelConfigured": bool(self.settings.model_path),
+            "modelConfigured": bool(self.settings.huggingface_space_url or self.settings.model_path),
             "modelInferenceEnabled": self.settings.enable_model_inference,
             "modelInferenceIsolated": self.settings.isolate_model_inference,
             "modelSource": source,
@@ -365,7 +365,9 @@ class EfficientNetInferenceEngine:
             "modelWorkerError": worker_error,
             "modelPathError": self.model_path_error,
             "modelPath": str(path) if path else None,
-            "usingFallbackPredictions": not self.settings.enable_model_inference or model is None or not labels,
+            "usingFallbackPredictions": not (self.settings.huggingface_space_url or self.settings.enable_model_inference)
+            or model is None
+            or not labels,
         }
 
     @cached_property
