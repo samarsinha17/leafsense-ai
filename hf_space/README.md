@@ -2,41 +2,27 @@
 title: LeafSense AI Model
 emoji: 🌿
 colorFrom: green
-colorTo: teal
+colorTo: green
 sdk: gradio
-sdk_version: 4.44.1
+sdk_version: 5.0.0
 app_file: app.py
 pinned: false
 license: mit
 ---
 
-# 🌿 LeafSense AI — Plant Disease Detection Model
+# LeafSense AI - Plant Disease Detection Model
 
 This Hugging Face Space serves the LeafSense AI EfficientNetB3 model trained on the PlantVillage dataset.
 
-It exposes a `/predict` REST endpoint consumed by the [LeafSense AI backend](https://github.com/samarsinha17/leafsense-ai) hosted on Render.
+It provides an interactive image upload interface for leaf disease classification.
 
-## API
+## Usage
 
-### `POST /predict`
-
-**Request:** multipart form-data with:
-- `file` — the leaf image (JPEG/PNG)
-- `top_k` — (optional, int, default 5) number of top predictions to return
-
-**Response:**
-```json
-{
-  "predictions": [
-    {"label": "Tomato___Early_blight", "score": 0.923},
-    ...
-  ]
-}
-```
+Upload a clear leaf image, choose how many top predictions to display, and click Analyze.
 
 ## Model
 
 - Architecture: EfficientNetB3 (fine-tuned)
 - Dataset: PlantVillage (39 classes)
-- Input size: 300×300
+- Input size: 300x300
 - Accuracy: ~99.6%
