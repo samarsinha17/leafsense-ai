@@ -47,8 +47,6 @@ export function DetectDisease() {
       setAssistantContext(result);
       navigate("/result");
     } catch {
-      setLastPrediction(null);
-      setAssistantContext(null);
       setAnalysisError(t("invalidImage"));
     } finally {
       setIsAnalyzing(false);
