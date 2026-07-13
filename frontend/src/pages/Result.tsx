@@ -189,21 +189,21 @@ export function Result() {
           </p>
 
           <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <div className="flex min-h-32 flex-col items-center justify-center rounded-2xl bg-primary/10 p-5 text-center">
+            <div className="flex min-h-32 min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl bg-primary/10 p-5 text-center">
               <p className="text-sm text-muted">{language === "hi" ? "फसल प्रकार" : language === "hinglish" ? "Crop Type" : "Crop Type"}</p>
               <p className="mt-2 break-words text-2xl font-bold text-primary">{result.cropName}</p>
             </div>
-            <div className="flex min-h-32 flex-col items-center justify-center rounded-2xl bg-primary/10 p-5 text-center">
+            <div className="flex min-h-32 min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl bg-primary/10 p-5 text-center">
               <p className="text-sm text-muted">{language === "hi" ? "आत्मविश्वास" : language === "hinglish" ? "Confidence" : "Confidence"}</p>
               <p className="mt-2 text-3xl font-bold text-primary">{result.confidenceScore}%</p>
             </div>
-            <div className="flex min-h-32 flex-col items-center justify-center rounded-2xl bg-primary/10 p-5 text-center">
+            <div className="flex min-h-32 min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl bg-primary/10 p-5 text-center">
               <p className="text-sm text-muted">{language === "hi" ? "संक्रमित क्षेत्र" : language === "hinglish" ? "Infected Area" : "Infected Area"}</p>
               <p className="mt-2 text-3xl font-bold text-primary">{result.infectedArea ?? 0}%</p>
             </div>
-            <div className="flex min-h-32 flex-col items-center justify-center rounded-2xl bg-primary/10 p-5 text-center">
+            <div className="flex min-h-32 min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl bg-primary/10 p-5 text-center">
               <p className="text-sm text-muted">{language === "hi" ? "गंभीरता" : language === "hinglish" ? "Severity" : "Severity"}</p>
-              <p className={`mt-2 break-words text-3xl font-bold ${severityClass}`}>{result.severity}</p>
+              <p className={`mt-2 max-w-full break-words text-center text-2xl font-bold leading-tight xl:text-[1.75rem] ${severityClass}`}>{result.severity}</p>
             </div>
           </div>
 
