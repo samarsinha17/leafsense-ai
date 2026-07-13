@@ -9,9 +9,11 @@ from app.models.scan import Scan
 from app.models.user import User
 from app.schemas.auth import UserResponse
 from app.services.gemini_service import GeminiRecommendationService
+from app.services.storage_service import StorageService
 from app.services.prediction_service import SCIENTIFIC_NAMES
 
 router = APIRouter(prefix="/users", tags=["users"])
+storage_service = StorageService()
 
 
 class ProfileUpdate(BaseModel):
@@ -48,7 +50,7 @@ def history(user: User = Depends(get_current_user), db: Session = Depends(get_db
     return [
         {
             "id": scan.id,
-            "imageUrl": scan.image_url,
+            "imageUrl": storage_service.resolve_image_url(scan.image_url),
             "cropName": scan.crop_name,
             "diseaseName": scan.disease_name,
             "confidenceScore": scan.confidence_score,
@@ -70,7 +72,7 @@ def history_detail(scan_id: int, user: User = Depends(get_current_user), db: Ses
     recommendation = GeminiRecommendationService().build_recommendation(scan.crop_name, scan.disease_name, severity)
     return {
         "id": str(scan.id),
-        "imageUrl": scan.image_url,
+        "imageUrl": storage_service.resolve_image_url(scan.image_url),
         "cropName": scan.crop_name,
         "diseaseName": scan.disease_name,
         "scientificName": SCIENTIFIC_NAMES.get(scan.crop_name, "Plant pathology sample"),
@@ -79,8 +81,8 @@ def history_detail(scan_id: int, user: User = Depends(get_current_user), db: Ses
         "infectedArea": 0 if severity == "Healthy" else None,
         "severity": severity,
         "timestamp": scan.created_at,
-        "heatmapUrl": scan.image_url,
-        "highlightedUrl": scan.image_url,
+        "heatmapUrl": storage_service.resolve_image_url(scan.image_url),
+        "highlightedUrl": storage_service.resolve_image_url(scan.image_url),
         "topPredictions": [{"label": f"{scan.crop_name} {scan.disease_name}", "value": scan.confidence_score}],
         "recommendation": recommendation.model_dump(),
     }

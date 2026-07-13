@@ -7,9 +7,11 @@ from app.models.scan import Report, Scan
 from app.schemas.disease import PredictionResponse
 from app.services.gemini_service import GeminiRecommendationService
 from app.services.report_service import ReportService
+from app.services.storage_service import StorageService
 from app.core.config import get_settings
 
 router = APIRouter(prefix="/reports", tags=["reports"])
+storage_service = StorageService()
 
 
 @router.get("/pdf/{scan_id}")
@@ -20,7 +22,7 @@ def pdf(scan_id: int, db: Session = Depends(get_db)):
     recommendation = GeminiRecommendationService().build_recommendation(scan.crop_name, scan.disease_name, scan.severity)
     prediction = PredictionResponse(
         id=str(scan.id),
-        imageUrl=scan.image_url,
+        imageUrl=storage_service.resolve_image_url(scan.image_url),
         cropName=scan.crop_name,
         diseaseName=scan.disease_name,
         scientificName="Available after model metadata sync",
