@@ -286,9 +286,9 @@ export async function exportDiagnosticPdf(result: PredictionResult, cropFacts: s
   wrapText(intelligence, rec.explanation, 56, 415, 112, 11, false, [31, 41, 55], 3);
   ["Field check: inspect lesion spread and underside symptoms", "Action: isolate affected tissue and track nearby plants", result.severity === "Critical" || result.severity === "High" ? "Timing: re-scan within 24-72 hours" : "Timing: re-scan during the next monitoring cycle"].forEach((note, index) => {
     const x = 56 + index * 240;
-    rect(intelligence, x, 365, 220, 42, index === 0 ? [236, 253, 245] : index === 1 ? [247, 252, 248] : [239, 246, 255]);
-    text(intelligence, note.split(":")[0], x + 12, 390, 9, true, [0, 83, 45]);
-    wrapText(intelligence, note.split(":")[1].trim(), x + 12, 377, 30, 8.5, false, [51, 65, 85], 2);
+    rect(intelligence, x, 358, 220, 54, index === 0 ? [236, 253, 245] : index === 1 ? [236, 253, 245] : [239, 246, 255]);
+    text(intelligence, note.split(":")[0], x + 12, 398, 9, true, [0, 83, 45]);
+    wrapText(intelligence, note.split(":")[1].trim(), x + 12, 384, 28, 8.3, false, [51, 65, 85], 2);
   });
   [["Symptoms", [
     ...rec.symptoms.slice(0, 4),
@@ -308,7 +308,7 @@ export async function exportDiagnosticPdf(result: PredictionResult, cropFacts: s
     const x = 36 + index * 260;
     outline(intelligence, x, 100, 240, 220, [255, 255, 255]);
     text(intelligence, String(title), x + 16, 286, 13, true, [0, 83, 45]);
-    (items as string[]).slice(0, 6).forEach((item, line) => wrapText(intelligence, `- ${item}`, x + 16, 256 - line * 28, 36, 9, false, [51, 65, 85], 2));
+    (items as string[]).slice(0, 6).forEach((item, line) => wrapText(intelligence, `- ${item}`, x + 16, 256 - line * 22, 34, 8.4, false, [51, 65, 85], 2));
   });
   footer(intelligence, 4, "LeafSense AI Disease Intelligence");
   pages.push({ ops: intelligence });
