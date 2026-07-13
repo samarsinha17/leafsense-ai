@@ -207,33 +207,16 @@ def gradio_predict(image, top_k: int = 5):
 
 load_model_and_labels()
 
-with gr.Blocks(title="LeafSense AI - Plant Disease Detection", theme=gr.themes.Soft(primary_hue="green")) as demo:
-    gr.Markdown(
-        """
-# LeafSense AI - Plant Disease Detection
-Upload a leaf image to detect plant diseases using EfficientNetB3 trained on PlantVillage.
-"""
-    )
+demo = gr.Interface(
+    fn=gradio_predict,
+    inputs=[
+        gr.Image(label="Upload Leaf Image", type="pil"),
+        gr.Slider(minimum=1, maximum=10, value=5, step=1, label="Top-K Predictions"),
+    ],
+    outputs=gr.Textbox(label="Predictions", lines=15, show_copy_button=True),
+    title="LeafSense AI - Plant Disease Detection",
+    description="Upload a leaf image to detect plant diseases using EfficientNetB3 trained on PlantVillage.",
+    allow_flagging="never",
+)
 
-    with gr.Row():
-        with gr.Column(scale=1):
-            image_input = gr.Image(label="Upload Leaf Image", type="pil")
-            top_k_slider = gr.Slider(minimum=1, maximum=10, value=5, step=1, label="Top-K Predictions")
-            predict_btn = gr.Button("Analyze", variant="primary")
-        with gr.Column(scale=1):
-            output_text = gr.Textbox(label="Predictions", lines=15, show_copy_button=True)
-
-    predict_btn.click(
-        fn=gradio_predict,
-        inputs=[image_input, top_k_slider],
-        outputs=output_text,
-    )
-
-    gr.Markdown(
-        """
----
-**Supported crops:** Apple, Blueberry, Cherry, Corn, Grape, Orange, Peach, Pepper, Potato, Raspberry, Soybean, Squash, Strawberry, Tomato
-"""
-    )
-
-demo.launch()
+demo.launch(server_name="0.0.0.0", server_port=7860)

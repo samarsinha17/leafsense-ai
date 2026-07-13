@@ -19,9 +19,9 @@ async def predict(
     db: Session = Depends(get_db),
     user: User | None = Depends(get_optional_user),
 ):
-    image_url = await StorageService().save_upload(file)
+    artifact = await StorageService().save_upload(file)
     try:
-        prediction = PredictionService().predict(image_url, crop_hint=cropHint)
+        prediction = PredictionService().predict(artifact.path, artifact.data_url, crop_hint=cropHint)
     except ModelUnavailableError as exc:
         raise HTTPException(
             status_code=503,
@@ -30,7 +30,7 @@ async def predict(
     db.add(
         Scan(
             user_id=user.id if user else None,
-            image_url=image_url,
+            image_url=artifact.data_url,
             crop_name=prediction.cropName,
             disease_name=prediction.diseaseName,
             confidence_score=prediction.confidenceScore,

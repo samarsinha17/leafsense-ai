@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from base64 import b64encode
 from pathlib import Path
 from uuid import uuid4
 from app.schemas.disease import PredictionResponse
@@ -112,6 +113,14 @@ class PredictionService:
             raise ModelUnavailableError(f"No prediction class matched the selected crop hint: {crop_hint}.")
         return filtered
 
+    def _to_data_url(self, image: "np.ndarray", mime_type: str = "image/jpeg") -> str:
+        import cv2
+
+        ok, buffer = cv2.imencode(".jpg", image)
+        if not ok:
+            raise ValueError("Failed to encode visualization image.")
+        return f"data:{mime_type};base64,{b64encode(buffer.tobytes()).decode('ascii')}"
+
     def _make_visualizations(self, image_path: Path, image_url: str) -> tuple[str, str]:
         try:
             import cv2
@@ -123,16 +132,11 @@ class PredictionService:
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             _, mask = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
             heatmap, overlay = create_disease_heatmap(image, mask.astype(np.uint8))
-            heatmap_path = image_path.with_name(f"{image_path.stem}-heatmap.jpg")
-            overlay_path = image_path.with_name(f"{image_path.stem}-highlighted.jpg")
-            cv2.imwrite(str(heatmap_path), heatmap)
-            cv2.imwrite(str(overlay_path), overlay)
-            return f"/uploads/{heatmap_path.name}", f"/uploads/{overlay_path.name}"
+            return self._to_data_url(heatmap), self._to_data_url(overlay)
         except Exception:
             return image_url, image_url
 
-    def predict(self, image_url: str, crop_hint: str | None = None) -> PredictionResponse:
-        image_path = self._image_path_from_url(image_url)
+    def predict(self, image_path: Path, image_url: str, crop_hint: str | None = None) -> PredictionResponse:
         requested_crop = self._normalize_crop_hint(crop_hint)
         top_k = 39 if requested_crop else 5
         top = self.engine.predict_top(str(image_path), top_k=top_k)
