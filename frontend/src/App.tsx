@@ -68,6 +68,9 @@ function ProtectedRoute({ children }: { children: JSX.Element }) {
 }
 
 export default function App() {
+  const location = useLocation();
+  const detectVisible = location.pathname === "/detect";
+
   return (
     <PageShell>
       <Suspense
@@ -77,9 +80,13 @@ export default function App() {
           </div>
         }
       >
+        <div className={detectVisible ? "" : "hidden"}>
+          <ProtectedRoute>
+            <DetectDisease />
+          </ProtectedRoute>
+        </div>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/detect" element={<ProtectedRoute><DetectDisease /></ProtectedRoute>} />
           <Route path="/result" element={<ProtectedRoute><Result /></ProtectedRoute>} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/dataset" element={<ProtectedRoute><Dataset /></ProtectedRoute>} />
