@@ -10,25 +10,31 @@ import { supportedCrops } from "../data/content";
 import { languageLabels, translate } from "../data/translations";
 
 export function DetectDisease() {
-  const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-  const [rotation, setRotation] = useState(0);
-  const [zoom, setZoom] = useState(1);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState("");
-  const [cropHint, setCropHint] = useState("auto");
   const language = useAppStore((state) => state.language);
   const setLastPrediction = useAppStore((state) => state.setLastPrediction);
   const setAssistantContext = useAppStore((state) => state.setAssistantContext);
+  const scanDraftFile = useAppStore((state) => state.scanDraftFile);
+  const scanDraftPreviewUrl = useAppStore((state) => state.scanDraftPreviewUrl);
+  const scanDraftRotation = useAppStore((state) => state.scanDraftRotation);
+  const scanDraftZoom = useAppStore((state) => state.scanDraftZoom);
+  const scanDraftCropHint = useAppStore((state) => state.scanDraftCropHint);
+  const setScanDraft = useAppStore((state) => state.setScanDraft);
+  const clearScanDraft = useAppStore((state) => state.clearScanDraft);
   const navigate = useNavigate();
   const t = (key: string) => translate(language, key);
 
   const onDrop = useCallback((files: File[]) => {
     const selected = files[0];
     if (!selected) return;
-    setFile(selected);
-    setPreview(URL.createObjectURL(selected));
-  }, []);
+    const previewUrl = URL.createObjectURL(selected);
+    if (scanDraftPreviewUrl?.startsWith("blob:")) {
+      URL.revokeObjectURL(scanDraftPreviewUrl);
+    }
+    setScanDraft({ file: selected, previewUrl });
+    setAnalysisError("");
+  }, [scanDraftPreviewUrl, setScanDraft]);
 
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop,
@@ -38,11 +44,11 @@ export function DetectDisease() {
   });
 
   async function analyze() {
-    if (!file) return;
+    if (!scanDraftFile) return;
     setIsAnalyzing(true);
     setAnalysisError("");
     try {
-      const result = await predictDisease(file, cropHint === "auto" ? "Auto detect" : cropHint);
+      const result = await predictDisease(scanDraftFile, scanDraftCropHint === "auto" ? "Auto detect" : scanDraftCropHint);
       setLastPrediction(result);
       setAssistantContext(result);
       navigate("/result");
@@ -62,12 +68,12 @@ export function DetectDisease() {
             className={`grid min-h-[360px] cursor-pointer place-items-center rounded-2xl border-2 border-dashed p-8 text-center transition hover:border-primary hover:bg-primary/5 ${isDragActive ? "border-primary bg-primary/10" : "border-border"}`}
           >
             <input {...getInputProps()} />
-            {preview ? (
+            {scanDraftPreviewUrl ? (
               <img
-                src={preview}
+                src={scanDraftPreviewUrl ?? undefined}
                 alt="Uploaded plant preview"
                 className="max-h-[340px] rounded-2xl object-contain"
-                style={{ transform: `rotate(${rotation}deg) scale(${zoom})` }}
+                style={{ transform: `rotate(${scanDraftRotation}deg) scale(${scanDraftZoom})` }}
               />
             ) : (
               <div>
@@ -88,8 +94,8 @@ export function DetectDisease() {
               <div className="relative">
                 <select
                   className="appearance-none rounded-full border border-border bg-card px-5 py-3 pr-10 text-sm font-semibold outline-none transition focus:border-primary"
-                  value={cropHint}
-                  onChange={(event) => setCropHint(event.target.value)}
+                  value={scanDraftCropHint}
+                  onChange={(event) => setScanDraft({ cropHint: event.target.value })}
                 >
                   <option value="auto">{t("autoDetect")}</option>
                   {supportedCrops.filter((crop) => crop !== "PlantVillage crops").map((crop) => <option key={crop} value={crop}>{crop}</option>)}
@@ -98,10 +104,16 @@ export function DetectDisease() {
               </div>
             </div>
             <div className="flex flex-wrap gap-3">
-            <Button variant="secondary" onClick={() => setRotation((value) => value + 90)}><RotateCcw size={17} /> {t("rotate")}</Button>
-            <Button variant="secondary" onClick={() => setZoom((value) => Math.min(value + 0.1, 1.6))}><ZoomIn size={17} /> {t("zoom")}</Button>
-            <Button variant="secondary" onClick={() => { setFile(null); setPreview(null); setZoom(1); setRotation(0); }}>{t("reset")}</Button>
-            <Button disabled={!file || isAnalyzing} onClick={analyze}><ScanLine size={17} /> {isAnalyzing ? t("analyzing") : t("analyzePlant")}</Button>
+            <Button variant="secondary" onClick={() => setScanDraft({ rotation: scanDraftRotation + 90 })}><RotateCcw size={17} /> {t("rotate")}</Button>
+            <Button variant="secondary" onClick={() => setScanDraft({ zoom: Math.min(scanDraftZoom + 0.1, 1.6) })}><ZoomIn size={17} /> {t("zoom")}</Button>
+            <Button variant="secondary" onClick={() => {
+              if (scanDraftPreviewUrl?.startsWith("blob:")) {
+                URL.revokeObjectURL(scanDraftPreviewUrl);
+              }
+              clearScanDraft();
+              setAnalysisError("");
+            }}>{language === "hi" ? "री-स्कैन" : language === "hinglish" ? "Re-scan" : "Re-scan"}</Button>
+            <Button disabled={!scanDraftFile || isAnalyzing} onClick={analyze}><ScanLine size={17} /> {isAnalyzing ? t("analyzing") : t("analyzePlant")}</Button>
             </div>
             {analysisError ? (
               <div className="rounded-2xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-300">
