@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
 import { Card } from "../components/ui/Card";
 import { getAssistantHistory } from "../services/api";
+import { useAppStore } from "../store/useAppStore";
+import { translate } from "../data/translations";
 
 type ChatItem = Awaited<ReturnType<typeof getAssistantHistory>>[number];
 
 export function AssistantHistory() {
   const [items, setItems] = useState<ChatItem[]>([]);
   const [selected, setSelected] = useState(0);
+  const language = useAppStore((state) => state.language);
+  const t = (key: string) => translate(language, key);
 
   useEffect(() => {
     getAssistantHistory().then(setItems).catch(() => setItems([]));
@@ -24,15 +28,15 @@ export function AssistantHistory() {
 
   return (
     <section className="mx-auto max-w-5xl px-6 py-16 lg:px-8">
-      <h1 className="font-heading text-4xl font-bold">Assistant History</h1>
+      <h1 className="font-heading text-4xl font-bold">{t("assistantHistory")}</h1>
       {items.length ? <div className="mt-8 grid gap-6 lg:grid-cols-[300px_1fr]">
         <div className="grid content-start gap-3">
           {sessions.map((session, index) => (
             <button key={session[0].id} onClick={() => setSelected(index)} className={`rounded-xl border p-4 text-left transition ${selected === index ? "border-primary bg-primary/10" : "border-border hover:border-primary/60"}`}>
-              <p className="font-semibold">Session {sessions.length - index}</p>
+              <p className="font-semibold">{language === "hi" ? "सत्र" : "Session"} {sessions.length - index}</p>
               <p className="mt-1 text-xs text-muted">{new Date(session[session.length - 1].created_at).toLocaleString()}</p>
               <p className="mt-2 truncate text-sm text-muted">{session[session.length - 1].message}</p>
-              <p className="mt-1 text-xs text-primary">{session.length} messages</p>
+              <p className="mt-1 text-xs text-primary">{session.length} {language === "hi" ? "संदेश" : "messages"}</p>
             </button>
           ))}
         </div>
@@ -41,13 +45,13 @@ export function AssistantHistory() {
             {[...active].reverse().map((item) => (
               <div className="rounded-xl border border-border bg-background/50 p-4" key={item.id}>
                 <p className="text-xs text-muted">{new Date(item.created_at).toLocaleString()}</p>
-                <p className="mt-3 font-semibold">You: {item.message}</p>
-                <p className="mt-3 whitespace-pre-wrap leading-7 text-muted">Assistant: {item.response}</p>
+                <p className="mt-3 font-semibold">{language === "hi" ? "आप:" : "You:"} {item.message}</p>
+                <p className="mt-3 whitespace-pre-wrap leading-7 text-muted">{language === "hi" ? "सहायक:" : "Assistant:"} {item.response}</p>
               </div>
             ))}
           </div>
         </Card>
-      </div> : <Card className="mt-8"><p className="text-muted">No assistant conversations yet.</p></Card>}
+      </div> : <Card className="mt-8"><p className="text-muted">{language === "hi" ? "अभी कोई assistant conversation नहीं है।" : "No assistant conversations yet."}</p></Card>}
     </section>
   );
 }

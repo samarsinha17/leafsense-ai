@@ -3,8 +3,12 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxi
 import { Search } from "lucide-react";
 import { Card } from "../components/ui/Card";
 import { cropDataset } from "../data/content";
+import { useAppStore } from "../store/useAppStore";
+import { translate } from "../data/translations";
 
 export function Dataset() {
+  const language = useAppStore((state) => state.language);
+  const t = (key: string) => translate(language, key);
   const [selectedCrop, setSelectedCrop] = useState(cropDataset[0]);
   const totalImages = useMemo(() => cropDataset.reduce((sum, item) => sum + item.images, 0), []);
   const trainingSamples = Math.round(totalImages * 0.8);
@@ -29,8 +33,8 @@ export function Dataset() {
     <section className="mx-auto max-w-7xl px-6 py-16 lg:px-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-heading text-4xl font-bold">Dataset</h1>
-          <p className="mt-3 max-w-2xl text-muted">PlantVillage-style class coverage, crop distribution, split details, and visual crop cards for the LeafSense model.</p>
+          <h1 className="font-heading text-4xl font-bold">{language === "hi" ? "डेटासेट" : language === "hinglish" ? "Dataset" : "Dataset"}</h1>
+          <p className="mt-3 max-w-2xl text-muted">{language === "hi" ? "PlantVillage-style class coverage, crop distribution, split details, aur visual crop cards LeafSense model ke liye." : language === "hinglish" ? "PlantVillage-style class coverage, crop distribution, split details, aur visual crop cards LeafSense model ke liye." : "PlantVillage-style class coverage, crop distribution, split details, and visual crop cards for the LeafSense model."}</p>
         </div>
       </div>
 
@@ -52,13 +56,13 @@ export function Dataset() {
         <div className="grid gap-4 md:grid-cols-3">
           <label className="flex items-center gap-2 rounded-full border border-border px-4 py-3">
             <Search size={18} />
-            <input className="w-full bg-transparent outline-none" placeholder="Search dataset classes" />
+            <input className="w-full bg-transparent outline-none" placeholder={language === "hi" ? "डेटासेट क्लासेस खोजें" : language === "hinglish" ? "Dataset classes search karo" : "Search dataset classes"} />
           </label>
           <select className="rounded-full border border-border bg-card px-4 py-3" onChange={(event) => setSelectedCrop(cropDataset.find((item) => item.crop === event.target.value) ?? cropDataset[0])}>
             {cropDataset.map((item) => <option key={item.crop}>{item.crop}</option>)}
           </select>
           <select className="rounded-full border border-border bg-card px-4 py-3">
-            <option>Filter By Disease</option>
+            <option>{language === "hi" ? "रोग के अनुसार फिल्टर" : language === "hinglish" ? "Filter By Disease" : "Filter By Disease"}</option>
             {selectedCrop.diseases.map((disease) => <option key={disease}>{disease}</option>)}
           </select>
         </div>
@@ -66,7 +70,7 @@ export function Dataset() {
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
         <Card className="h-96">
-          <h2 className="font-heading text-xl font-bold">Class Distribution Graph</h2>
+          <h2 className="font-heading text-xl font-bold">{language === "hi" ? "क्लास वितरण ग्राफ" : language === "hinglish" ? "Class Distribution Graph" : "Class Distribution Graph"}</h2>
           <ResponsiveContainer width="100%" height="85%">
             <BarChart data={cropDataset}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -92,7 +96,7 @@ export function Dataset() {
             </div>
           </div>
           <div className="mt-6 rounded-2xl border border-border p-4">
-            <h3 className="font-semibold">Do you know?</h3>
+              <h3 className="font-semibold">{language === "hi" ? "क्या आप जानते हैं?" : language === "hinglish" ? "Do you know?" : "Do you know?"}</h3>
             <ul className="mt-3 grid gap-2 text-sm text-muted">
               {selectedCrop.facts.map((item) => <li key={item}>{item}</li>)}
             </ul>

@@ -4,9 +4,12 @@ import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { getProfile, updateProfile } from "../services/api";
 import { useAppStore } from "../store/useAppStore";
+import { translate } from "../data/translations";
 
 export function Settings() {
   const { user, setUser, theme, toggleTheme } = useAppStore();
+  const language = useAppStore((state) => state.language);
+  const t = (key: string) => translate(language, key);
   const navigate = useNavigate();
   const [fullName, setFullName] = useState(user?.fullName ?? "");
   const [profileImage, setProfileImage] = useState(user?.profileImage ?? "");
@@ -114,16 +117,16 @@ export function Settings() {
 
   return (
     <section className="mx-auto max-w-5xl px-6 py-16 lg:px-8">
-      <h1 className="font-heading text-4xl font-bold">Account Settings</h1>
+      <h1 className="font-heading text-4xl font-bold">{t("accountSettings")}</h1>
       <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_0.9fr]">
         <Card>
           <form className="grid gap-4" onSubmit={submit}>
             <label className="grid gap-2 text-sm font-semibold">
-              Change Name
+              {language === "hi" ? "नाम बदलें" : "Change Name"}
               <input className="rounded-2xl border border-border bg-transparent px-4 py-3 outline-none focus:border-primary" value={fullName} onChange={(event) => setFullName(event.target.value)} />
             </label>
             <div className="grid gap-4">
-              <p className="text-sm font-semibold">Profile Picture</p>
+              <p className="text-sm font-semibold">{language === "hi" ? "प्रोफ़ाइल चित्र" : "Profile Picture"}</p>
               <div className="flex flex-wrap items-center gap-5">
                 <div className="grid h-28 w-28 place-items-center overflow-hidden rounded-full border-4 border-primary/30 bg-primary/10">
                   {profileImage ? <img className="h-full w-full object-cover" src={profileImage} alt="Profile preview" /> : <span className="text-2xl font-bold text-primary">{fullName.split(" ").map((part) => part[0]).join("").slice(0, 2)}</span>}
@@ -149,29 +152,29 @@ export function Settings() {
                       <input type="range" min="-75" max="75" step="1" value={offsetY} onChange={(event) => setOffsetY(Number(event.target.value))} />
                     </label>
                     <div className="flex flex-wrap gap-3">
-                      <Button type="button" variant="secondary" onClick={applyCrop}>Apply Crop</Button>
-                      <Button type="button" variant="secondary" onClick={() => { setZoom(1.15); setOffsetX(0); setOffsetY(0); }}>Reset Crop</Button>
+                  <Button type="button" variant="secondary" onClick={applyCrop}>{language === "hi" ? "क्रॉप लागू करें" : "Apply Crop"}</Button>
+                      <Button type="button" variant="secondary" onClick={() => { setZoom(1.15); setOffsetX(0); setOffsetY(0); }}>{language === "hi" ? "क्रॉप रीसेट" : "Reset Crop"}</Button>
                     </div>
                   </div>
                 </div>
               ) : null}
             </div>
             {status ? <p className="rounded-2xl bg-primary/10 px-4 py-3 text-sm text-primary">{status}</p> : null}
-            <Button disabled={saving} type="submit">{saving ? "Saving..." : "Save Settings"}</Button>
+            <Button disabled={saving} type="submit">{saving ? (language === "hi" ? "सेव हो रहा है..." : "Saving...") : t("saveSettings")}</Button>
           </form>
         </Card>
         <div className="grid gap-6">
           <Card>
-            <h2 className="font-heading text-xl font-bold">Notification Preferences</h2>
-            <p className="mt-3 text-sm text-muted">Report alerts, diagnostic reminders, and assistant summaries are enabled for the current account workflow.</p>
+            <h2 className="font-heading text-xl font-bold">{t("notificationPreferences")}</h2>
+            <p className="mt-3 text-sm text-muted">{language === "hi" ? "Report alerts, diagnostic reminders, aur assistant summaries current account workflow ke liye enabled hain." : "Report alerts, diagnostic reminders, and assistant summaries are enabled for the current account workflow."}</p>
           </Card>
           <Card>
-            <h2 className="font-heading text-xl font-bold">Theme Preference</h2>
+            <h2 className="font-heading text-xl font-bold">{t("themePreference")}</h2>
             <p className="mt-2 text-sm text-muted">Current theme: {theme}</p>
-            <Button className="mt-4" type="button" variant="secondary" onClick={toggleTheme}>Toggle Theme</Button>
+            <Button className="mt-4" type="button" variant="secondary" onClick={toggleTheme}>{language === "hi" ? "थीम बदलें" : "Toggle Theme"}</Button>
           </Card>
           <Card>
-            <h2 className="font-heading text-xl font-bold">Privacy & Security</h2>
+            <h2 className="font-heading text-xl font-bold">{t("privacySecurity")}</h2>
             <div className="mt-3 grid gap-2 text-sm text-muted">
               <p>Login method: {user?.isVerified ? "Google / Verified" : "Email password"}</p>
               <p>Active session: Browser JWT session</p>

@@ -1,5 +1,7 @@
 import { Brain, Cpu, Database, GitBranch, ImageUp, ScanSearch } from "lucide-react";
 import { Card } from "../components/ui/Card";
+import { useAppStore } from "../store/useAppStore";
+import { translate } from "../data/translations";
 
 const metrics = [
   ["Backbone", "EfficientNet-B3"],
@@ -16,12 +18,14 @@ const pipeline = [
 ];
 
 export function Model() {
+  const language = useAppStore((state) => state.language);
+  const t = (key: string) => translate(language, key);
   return (
     <section className="mx-auto max-w-7xl px-6 py-16 lg:px-8">
       <div className="max-w-3xl">
-        <h1 className="font-heading text-4xl font-bold">AI Model Details</h1>
+        <h1 className="font-heading text-4xl font-bold">{t("aiModelDetails")}</h1>
         <p className="mt-3 text-muted">
-          LeafSense uses the already trained Keras model for inference only. The training pipeline is documented but not rerun during app diagnosis.
+          {language === "hi" ? "LeafSense पहले से प्रशिक्षित Keras मॉडल का केवल inference के लिए उपयोग करता है। Training pipeline documented है, लेकिन app diagnosis के दौरान rerun नहीं होती।" : language === "hinglish" ? "LeafSense already trained Keras model ko sirf inference ke liye use karta hai. Training pipeline documented hai, but app diagnosis ke dauran rerun nahi hoti." : "LeafSense uses the already trained Keras model for inference only. The training pipeline is documented but not rerun during app diagnosis."}
         </p>
       </div>
 
@@ -37,14 +41,14 @@ export function Model() {
       <div className="mt-8 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
         <Card>
           <Database className="text-primary" />
-          <h2 className="mt-4 font-heading text-2xl font-bold">Dataset Overview</h2>
+          <h2 className="mt-4 font-heading text-2xl font-bold">{t("datasetOverview")}</h2>
           <p className="mt-3 leading-7 text-muted">
-            The model is aligned to PlantVillage-style classes across tomato, potato, corn, apple, grape, pepper, strawberry, and related crop groups.
+            {language === "hi" ? "Model PlantVillage-style classes ke saath aligned hai: tomato, potato, corn, apple, grape, pepper, strawberry, aur related crop groups." : language === "hinglish" ? "Model PlantVillage-style classes ke saath aligned hai: tomato, potato, corn, apple, grape, pepper, strawberry, aur related crop groups." : "The model is aligned to PlantVillage-style classes across tomato, potato, corn, apple, grape, pepper, strawberry, and related crop groups."}
           </p>
         </Card>
         <Card>
           <GitBranch className="text-primary" />
-          <h2 className="mt-4 font-heading text-2xl font-bold">Inference Pipeline</h2>
+          <h2 className="mt-4 font-heading text-2xl font-bold">{t("inferencePipeline")}</h2>
           <div className="mt-5 grid gap-4 md:grid-cols-2">
             {pipeline.map((step) => (
               <div className="rounded-2xl border border-border p-4" key={step.title}>

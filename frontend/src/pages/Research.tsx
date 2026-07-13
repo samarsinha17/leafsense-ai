@@ -1,10 +1,14 @@
 import { Card } from "../components/ui/Card";
 import { researchSections } from "../data/content";
+import { useAppStore } from "../store/useAppStore";
+import { translate } from "../data/translations";
 
 export function Research() {
+  const language = useAppStore((state) => state.language);
+  const t = (key: string) => translate(language, key);
   return (
     <section className="mx-auto max-w-5xl px-6 py-16 lg:px-8">
-      <h1 className="font-heading text-4xl font-bold">Academic Research Showcase</h1>
+      <h1 className="font-heading text-4xl font-bold">{t("academicResearchShowcase")}</h1>
       <div className="mt-8 grid gap-5">
         {researchSections.map((section) => (
           <Card key={section.title}>

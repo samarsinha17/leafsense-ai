@@ -1,17 +1,21 @@
 import { Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Logo } from "../Logo";
+import { useAppStore } from "../../store/useAppStore";
+import { translate } from "../../data/translations";
 
 export function Footer() {
+  const language = useAppStore((state) => state.language);
+  const t = (key: string) => translate(language, key);
   const product = [
-    ["Disease Detection", "/detect"],
-    ["Supported Crops", "/dataset"],
-    ["Model Analytics", "/analytics"],
+    [t("detectDisease"), "/detect"],
+    [t("supportedCropTypes"), "/dataset"],
+    [t("analytics"), "/analytics"],
   ];
   const resources = [
-    ["Model Details", "/analytics"],
-    ["Research", "/research"],
-    ["Architecture", "/dashboard"],
+    [t("aiModelDetails"), "/analytics"],
+    [t("research"), "/research"],
+    [t("dashboardTitle"), "/dashboard"],
   ];
 
   return (
@@ -20,12 +24,12 @@ export function Footer() {
         <div>
           <Logo />
           <p className="mt-4 max-w-sm text-sm leading-6 text-muted">
-            AI-powered plant disease detection that transforms leaf images into accurate predictions, actionable insights, and smart crop care recommendations.
+            {t("footerDescription")}
           </p>
-          <p className="mt-6 text-xs text-muted">Copyright 2026 LeafSense AI. Terms. Privacy Policy.</p>
+          <p className="mt-6 text-xs text-muted">{t("copyrightLine")}</p>
         </div>
         <div>
-          <h3 className="font-heading text-sm font-bold">Product</h3>
+          <h3 className="font-heading text-sm font-bold">{t("footerProduct")}</h3>
           <div className="mt-4 grid gap-2 text-sm text-muted">
             {product.map(([label, path]) => (
               <Link className="hover:text-primary" to={path} key={path}>{label}</Link>
@@ -33,7 +37,7 @@ export function Footer() {
           </div>
         </div>
         <div>
-          <h3 className="font-heading text-sm font-bold">Resources</h3>
+          <h3 className="font-heading text-sm font-bold">{t("footerResources")}</h3>
           <div className="mt-4 grid gap-2 text-sm text-muted">
             {resources.map(([label, path]) => (
               <Link className="hover:text-primary" to={path} key={path}>{label}</Link>
@@ -41,10 +45,10 @@ export function Footer() {
           </div>
         </div>
         <div>
-          <h3 className="font-heading text-sm font-bold">Contact</h3>
+          <h3 className="font-heading text-sm font-bold">{t("footerContact")}</h3>
           <div className="mt-4 grid gap-3 text-sm text-muted">
-            <Link className="inline-flex items-center gap-2 hover:text-primary" to="/team"><Users size={18} /> Our Team</Link>
-            <Link className="hover:text-primary" to="/contact">Get in touch</Link>
+            <Link className="inline-flex items-center gap-2 hover:text-primary" to="/team"><Users size={18} /> {t("ourTeam")}</Link>
+            <Link className="hover:text-primary" to="/contact">{t("getInTouch")}</Link>
           </div>
         </div>
       </div>

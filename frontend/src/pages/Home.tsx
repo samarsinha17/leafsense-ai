@@ -6,9 +6,35 @@ import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Logo } from "../components/Logo";
 import { useAppStore } from "../store/useAppStore";
+import { translate } from "../data/translations";
 
 export function Home() {
   const user = useAppStore((state) => state.user);
+  const language = useAppStore((state) => state.language);
+  const t = (key: string) => translate(language, key);
+  const localizedFeatures = featureCards.map((feature, index) => {
+    const titleKey = `feature${index + 1}Title`;
+    const descriptionKey = `feature${index + 1}Description`;
+    return { ...feature, title: t(titleKey), description: t(descriptionKey) };
+  });
+  const localizedSteps = howItWorks.map((step, index) => {
+    const titleKey = `step${index + 1}Title`;
+    const detailKey = `step${index + 1}Detail`;
+    return { ...step, title: t(titleKey), detail: t(detailKey) };
+  });
+  const localizedStats = stats.map(([label, value]) => {
+    const map: Record<string, string> = {
+      "Predictions Made": t("predictionsMade"),
+      "Accuracy Rate": t("accuracyRate"),
+      "Active Users": t("activeUsers"),
+      "Supported Crops": t("supportedCropsCount"),
+      "Healthy Plants Detected": t("healthyPlantsDetected"),
+      "Diseased Plants Detected": t("diseasedPlantsDetected"),
+      "Average Confidence Score": t("averageConfidenceScore"),
+    };
+    return [map[label] ?? label, value] as const;
+  });
+
   return (
     <>
       <section className="relative isolate overflow-hidden px-6 py-24 text-center lg:px-8 lg:py-32">
@@ -29,17 +55,17 @@ export function Home() {
             LeafSense AI
           </h1>
           <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-muted">
-            AI-Powered Plant Disease Detection and Agricultural Intelligence System
+            {language === "hi" ? "AI-संचालित पौधों की बीमारी पहचान और कृषि बुद्धिमत्ता प्रणाली" : language === "hinglish" ? "AI-powered plant disease detection aur agricultural intelligence system" : "AI-Powered Plant Disease Detection and Agricultural Intelligence System"}
           </p>
           <div className="mt-10 flex flex-wrap justify-center gap-4">
-            <Link to="/detect"><Button>Start Detection <ArrowRight size={18} /></Button></Link>
-            <Link to="/research"><Button variant="secondary">Learn More</Button></Link>
+            <Link to="/detect"><Button>{t("startDetection")} <ArrowRight size={18} /></Button></Link>
+            <Link to="/research"><Button variant="secondary">{t("learnMore")}</Button></Link>
           </div>
         </motion.div>
       </section>
 
       <section className="mx-auto grid max-w-7xl gap-4 px-6 py-10 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
-        {stats.map(([label, value]) => (
+        {localizedStats.map(([label, value]) => (
           <Card key={label}>
             <p className="text-3xl font-bold text-primary">{value}</p>
             <p className="mt-2 text-sm text-muted">{label}</p>
@@ -48,9 +74,9 @@ export function Home() {
       </section>
 
       <section className="mx-auto max-w-7xl px-6 py-20 lg:px-8">
-        <h2 className="font-heading text-4xl font-bold">Agricultural Intelligence Features</h2>
+        <h2 className="font-heading text-4xl font-bold">{t("agriculturalIntelligenceFeatures")}</h2>
         <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-          {featureCards.map((feature) => (
+          {localizedFeatures.map((feature) => (
             <Card key={feature.title}>
               <feature.icon className="text-primary" size={28} />
               <h3 className="mt-5 font-heading text-lg font-bold">{feature.title}</h3>
@@ -62,9 +88,9 @@ export function Home() {
 
       <section className="bg-card/50 py-20">
         <div className="mx-auto max-w-6xl px-6 lg:px-8">
-          <h2 className="font-heading text-4xl font-bold">How It Works</h2>
+          <h2 className="font-heading text-4xl font-bold">{t("howItWorks")}</h2>
           <div className="mt-10 grid gap-5 lg:grid-cols-5">
-            {howItWorks.map((step, index) => (
+            {localizedSteps.map((step, index) => (
               <Card key={step.title} className="relative">
                 <span className="text-xs font-bold text-primary">Step {index + 1}</span>
                 <step.icon className="mt-5 text-primary" />
@@ -78,18 +104,18 @@ export function Home() {
 
       <section className="mx-auto max-w-7xl px-6 py-20 lg:px-8">
         <div className="grid gap-6 lg:grid-cols-3">
-          {["Academic reviewers praised the platform-quality analytics.", "The CV pipeline makes diagnosis explainable for demonstrations.", "A scalable foundation for real-world agriculture deployment."].map((quote) => (
+          {[t("academicTestimonial1"), t("academicTestimonial2"), t("academicTestimonial3")].map((quote) => (
             <Card key={quote}>
               <p className="text-lg leading-8">"{quote}"</p>
-              <p className="mt-5 text-sm font-semibold text-primary">Academic Style Testimonial</p>
+              <p className="mt-5 text-sm font-semibold text-primary">{t("academicTestimonialLabel")}</p>
             </Card>
           ))}
         </div>
         <div className="mt-16 rounded-3xl border border-primary/40 bg-primary/10 p-10 text-center">
-          <h2 className="font-heading text-4xl font-bold">Start Detecting Plant Diseases Today</h2>
+          <h2 className="font-heading text-4xl font-bold">{t("startDetecting")}</h2>
           <div className="mt-8 flex justify-center gap-4">
-            <Link to="/detect"><Button>Upload Image</Button></Link>
-            {user ? null : <Link to="/signup"><Button variant="secondary">Create Account</Button></Link>}
+            <Link to="/detect"><Button>{t("uploadImage")}</Button></Link>
+            {user ? null : <Link to="/signup"><Button variant="secondary">{t("createAccount")}</Button></Link>}
           </div>
         </div>
       </section>

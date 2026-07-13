@@ -63,9 +63,9 @@ export function Navbar() {
       case "Research":
         return t("research");
       case "Team":
-        return t("team");
+        return t("teamLabel");
       case "Contact":
-        return t("contact");
+        return t("contactLabel");
       default:
         return label;
     }

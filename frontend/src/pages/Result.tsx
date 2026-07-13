@@ -8,29 +8,32 @@ import { sendGmailContact } from "../services/api";
 import { useAppStore } from "../store/useAppStore";
 import { recordLocalReport } from "../utils/localReports";
 import { exportDiagnosticCsv, exportDiagnosticPdf } from "../utils/reportExport";
+import { translate } from "../data/translations";
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 export function Result() {
   const storedResult = useAppStore((state) => state.lastPrediction);
   const setAssistantContext = useAppStore((state) => state.setAssistantContext);
+  const language = useAppStore((state) => state.language);
+  const t = (key: string) => translate(language, key);
   const navigate = useNavigate();
   const [emailStatus, setEmailStatus] = useState("");
   if (!storedResult) {
     return (
       <section className="mx-auto max-w-3xl px-6 py-16 lg:px-8">
         <Card>
-          <p className="text-sm font-bold uppercase tracking-[0.18em] text-primary">No Diagnostic Result</p>
-          <h1 className="mt-3 font-heading text-3xl font-bold">Run a real leaf analysis first</h1>
+          <p className="text-sm font-bold uppercase tracking-[0.18em] text-primary">{language === "hi" ? "कोई परिणाम नहीं" : language === "hinglish" ? "No Diagnostic Result" : "No Diagnostic Result"}</p>
+          <h1 className="mt-3 font-heading text-3xl font-bold">{language === "hi" ? "पहले एक वास्तविक leaf analysis चलाएँ" : language === "hinglish" ? "Run a real leaf analysis first" : "Run a real leaf analysis first"}</h1>
           <p className="mt-3 text-muted">
-            No valid model result is available for this session. The app will not show demo disease data as a real diagnosis.
+            {language === "hi" ? "इस session के लिए कोई valid model result उपलब्ध नहीं है। App demo disease data को real diagnosis की तरह नहीं दिखाएगा।" : language === "hinglish" ? "No valid model result is available for this session. App demo disease data ko real diagnosis ki tarah nahi dikhayega." : "No valid model result is available for this session. The app will not show demo disease data as a real diagnosis."}
           </p>
           <div className="mt-6">
             <Button onClick={() => navigate("/detect")}>
-              <PlusCircle size={17} /> Start New Scan
-            </Button>
-          </div>
-        </Card>
+                <PlusCircle size={17} /> {t("startDetection")}
+              </Button>
+            </div>
+          </Card>
       </section>
     );
   }
@@ -170,12 +173,12 @@ export function Result() {
         <Card>
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <p className="text-sm font-bold uppercase tracking-[0.18em] text-primary">Diagnostic Result</p>
+              <p className="text-sm font-bold uppercase tracking-[0.18em] text-primary">{language === "hi" ? "डायग्नोस्टिक परिणाम" : language === "hinglish" ? "Diagnostic Result" : "Diagnostic Result"}</p>
               <p className="mt-2 text-sm text-muted">{new Date(result.timestamp).toLocaleString()}</p>
             </div>
             <Link to="/detect">
               <Button variant="secondary">
-                <PlusCircle size={17} /> New Scan
+                <PlusCircle size={17} /> {language === "hi" ? "नया स्कैन" : language === "hinglish" ? "New Scan" : "New Scan"}
               </Button>
             </Link>
           </div>
@@ -187,25 +190,25 @@ export function Result() {
 
           <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <div className="flex min-h-32 flex-col items-center justify-center rounded-2xl bg-primary/10 p-5 text-center">
-              <p className="text-sm text-muted">Crop Type</p>
+              <p className="text-sm text-muted">{language === "hi" ? "फसल प्रकार" : language === "hinglish" ? "Crop Type" : "Crop Type"}</p>
               <p className="mt-2 break-words text-2xl font-bold text-primary">{result.cropName}</p>
             </div>
             <div className="flex min-h-32 flex-col items-center justify-center rounded-2xl bg-primary/10 p-5 text-center">
-              <p className="text-sm text-muted">Confidence</p>
+              <p className="text-sm text-muted">{language === "hi" ? "आत्मविश्वास" : language === "hinglish" ? "Confidence" : "Confidence"}</p>
               <p className="mt-2 text-3xl font-bold text-primary">{result.confidenceScore}%</p>
             </div>
             <div className="flex min-h-32 flex-col items-center justify-center rounded-2xl bg-primary/10 p-5 text-center">
-              <p className="text-sm text-muted">Infected Area</p>
+              <p className="text-sm text-muted">{language === "hi" ? "संक्रमित क्षेत्र" : language === "hinglish" ? "Infected Area" : "Infected Area"}</p>
               <p className="mt-2 text-3xl font-bold text-primary">{result.infectedArea ?? 0}%</p>
             </div>
             <div className="flex min-h-32 flex-col items-center justify-center rounded-2xl bg-primary/10 p-5 text-center">
-              <p className="text-sm text-muted">Severity</p>
+              <p className="text-sm text-muted">{language === "hi" ? "गंभीरता" : language === "hinglish" ? "Severity" : "Severity"}</p>
               <p className={`mt-2 break-words text-3xl font-bold ${severityClass}`}>{result.severity}</p>
             </div>
           </div>
 
           <div className="mt-6 rounded-2xl border border-border p-5">
-            <h3 className="font-semibold">Top predictions</h3>
+            <h3 className="font-semibold">{language === "hi" ? "शीर्ष परिणाम" : language === "hinglish" ? "Top predictions" : "Top predictions"}</h3>
             <div className="mt-4 grid gap-3">
               {topPredictions.slice(0, 5).map((item) => (
                 <div key={item.label}>
@@ -224,12 +227,12 @@ export function Result() {
           <p className="mt-6 leading-7 text-muted">{recommendation.explanation}</p>
           <div className="mt-8 grid gap-4 md:grid-cols-2">
             {[
-              ["Symptoms", recommendation.symptoms],
-              ["Causes", recommendation.causes],
-              ["Immediate Actions", recommendation.immediateActions],
-              ["Organic Treatment", recommendation.organicTreatment],
-              ["Chemical Treatment", recommendation.chemicalTreatment],
-              ["Preventive Measures", recommendation.preventiveMeasures],
+              [language === "hi" ? "लक्षण" : language === "hinglish" ? "Symptoms" : "Symptoms", recommendation.symptoms],
+              [language === "hi" ? "कारण" : language === "hinglish" ? "Causes" : "Causes", recommendation.causes],
+              [language === "hi" ? "तुरंत कदम" : language === "hinglish" ? "Immediate Actions" : "Immediate Actions", recommendation.immediateActions],
+              [language === "hi" ? "जैविक उपचार" : language === "hinglish" ? "Organic Treatment" : "Organic Treatment", recommendation.organicTreatment],
+              [language === "hi" ? "रासायनिक उपचार" : language === "hinglish" ? "Chemical Treatment" : "Chemical Treatment", recommendation.chemicalTreatment],
+              [language === "hi" ? "रोकथाम उपाय" : language === "hinglish" ? "Preventive Measures" : "Preventive Measures", recommendation.preventiveMeasures],
             ].map(([title, items]) => (
               <div key={title as string}>
                 <h3 className="font-semibold">{title as string}</h3>
@@ -246,16 +249,16 @@ export function Result() {
               <Download size={17} /> Download PDF
             </Button>
             <Button variant="secondary" onClick={() => downloadReport("csv")}>
-              <FileDown size={17} /> Export CSV
+            <FileDown size={17} /> {t("exportCsv")}
             </Button>
             <Button variant="secondary" onClick={emailReport}>
-              <Mail size={17} /> Email Report
+              <Mail size={17} /> {language === "hi" ? "ईमेल रिपोर्ट" : language === "hinglish" ? "Email Report" : "Email Report"}
             </Button>
             <Button variant="secondary" onClick={shareReport}>
-              <Share2 size={17} /> Share Report
+              <Share2 size={17} /> {language === "hi" ? "रिपोर्ट शेयर करें" : language === "hinglish" ? "Share Report" : "Share Report"}
             </Button>
             <Button variant="secondary" onClick={askAssistantAboutReport}>
-              <Bot size={17} /> Ask AI About This Result
+              <Bot size={17} /> {t("askAssistant")}
             </Button>
           </div>
           {emailStatus ? <p className="mt-4 rounded-2xl bg-primary/10 px-4 py-3 text-sm text-primary">{emailStatus}</p> : null}
