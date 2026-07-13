@@ -5,6 +5,7 @@ import { Logo } from "./components/Logo";
 import { getProfile } from "./services/api";
 import { useAppStore } from "./store/useAppStore";
 import { DetectDisease } from "./pages/DetectDisease";
+import { Result } from "./pages/Result";
 
 const Admin = lazy(() => import("./pages/Admin").then((module) => ({ default: module.Admin })));
 const Analytics = lazy(() => import("./pages/Analytics").then((module) => ({ default: module.Analytics })));
@@ -21,7 +22,6 @@ const MyDiagnoses = lazy(() => import("./pages/MyDiagnoses").then((module) => ({
 const MyReports = lazy(() => import("./pages/MyReports").then((module) => ({ default: module.MyReports })));
 const Profile = lazy(() => import("./pages/Profile").then((module) => ({ default: module.Profile })));
 const Research = lazy(() => import("./pages/Research").then((module) => ({ default: module.Research })));
-const Result = lazy(() => import("./pages/Result").then((module) => ({ default: module.Result })));
 const Settings = lazy(() => import("./pages/Settings").then((module) => ({ default: module.Settings })));
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
