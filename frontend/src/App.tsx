@@ -23,7 +23,6 @@ const Profile = lazy(() => import("./pages/Profile").then((module) => ({ default
 const Research = lazy(() => import("./pages/Research").then((module) => ({ default: module.Research })));
 const Result = lazy(() => import("./pages/Result").then((module) => ({ default: module.Result })));
 const Settings = lazy(() => import("./pages/Settings").then((module) => ({ default: module.Settings })));
-const Team = lazy(() => import("./pages/Team").then((module) => ({ default: module.Team })));
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
   const user = useAppStore((state) => state.user);
@@ -88,7 +87,6 @@ export default function App() {
           <Route path="/model" element={<ProtectedRoute><Model /></ProtectedRoute>} />
           <Route path="/assistant" element={<ProtectedRoute><Assistant /></ProtectedRoute>} />
           <Route path="/research" element={<ProtectedRoute><Research /></ProtectedRoute>} />
-          <Route path="/team" element={<ProtectedRoute><Team /></ProtectedRoute>} />
           <Route path="/contact" element={<ProtectedRoute><Contact /></ProtectedRoute>} />
           <Route path="/login" element={<Auth mode="login" />} />
           <Route path="/signup" element={<Auth mode="signup" />} />

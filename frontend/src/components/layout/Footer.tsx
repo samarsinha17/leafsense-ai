@@ -1,4 +1,3 @@
-import { Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Logo } from "../Logo";
 import { useAppStore } from "../../store/useAppStore";
@@ -47,7 +46,6 @@ export function Footer() {
         <div>
           <h3 className="font-heading text-sm font-bold">{t("footerContact")}</h3>
           <div className="mt-4 grid gap-3 text-sm text-muted">
-            <Link className="inline-flex items-center gap-2 hover:text-primary" to="/team"><Users size={18} /> {t("ourTeam")}</Link>
             <Link className="hover:text-primary" to="/contact">{t("getInTouch")}</Link>
           </div>
         </div>

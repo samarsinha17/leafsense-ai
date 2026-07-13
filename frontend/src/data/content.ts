@@ -26,7 +26,6 @@ export const navItems = [
   { label: "Model", path: "/model" },
   { label: "Assistant", path: "/assistant" },
   { label: "Research", path: "/research" },
-  { label: "Team", path: "/team" },
   { label: "Contact", path: "/contact" },
 ];
 

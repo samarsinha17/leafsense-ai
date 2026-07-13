@@ -201,9 +201,9 @@ export function Result() {
               <p className="text-sm text-muted">{language === "hi" ? "संक्रमित क्षेत्र" : language === "hinglish" ? "Infected Area" : "Infected Area"}</p>
               <p className="mt-2 text-3xl font-bold text-primary">{result.infectedArea ?? 0}%</p>
             </div>
-            <div className="flex min-h-32 min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl bg-primary/10 p-5 text-center">
+            <div className="flex min-h-32 min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl bg-primary/10 p-4 text-center">
               <p className="text-sm text-muted">{language === "hi" ? "गंभीरता" : language === "hinglish" ? "Severity" : "Severity"}</p>
-              <p className={`mt-2 max-w-full whitespace-nowrap text-center text-[1.45rem] font-bold leading-none tracking-tight xl:text-[1.7rem] ${severityClass}`}>{result.severity}</p>
+              <p className={`mt-2 max-w-full whitespace-nowrap text-center text-[1.05rem] font-bold leading-none tracking-tight xl:text-[1.1rem] ${severityClass}`}>{result.severity}</p>
             </div>
           </div>
 

@@ -62,8 +62,6 @@ export function Navbar() {
         return t("assistant");
       case "Research":
         return t("research");
-      case "Team":
-        return t("teamLabel");
       case "Contact":
         return t("contactLabel");
       default:
