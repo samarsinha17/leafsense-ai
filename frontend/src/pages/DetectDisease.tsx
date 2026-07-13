@@ -200,22 +200,22 @@ export function DetectDisease() {
                 {lastPrediction.scientificName} | {lastPrediction.diseaseCategory} | {lastPrediction.cropName}
               </p>
 
-              <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="mt-6 grid gap-4 sm:grid-cols-2">
                 <div className="flex min-h-32 min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl bg-primary/10 p-5 text-center">
                   <p className="text-sm text-muted">{language === "hi" ? "फसल प्रकार" : language === "hinglish" ? "Crop Type" : "Crop Type"}</p>
-                  <p className="mt-2 break-words text-2xl font-bold text-primary">{lastPrediction.cropName}</p>
+                  <p className="mt-2 break-words text-xl font-bold leading-tight text-primary">{lastPrediction.cropName}</p>
                 </div>
                 <div className="flex min-h-32 min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl bg-primary/10 p-5 text-center">
                   <p className="text-sm text-muted">{language === "hi" ? "आत्मविश्वास" : language === "hinglish" ? "Confidence" : "Confidence"}</p>
-                  <p className="mt-2 text-3xl font-bold text-primary">{lastPrediction.confidenceScore}%</p>
+                  <p className="mt-2 text-2xl font-bold leading-tight text-primary">{lastPrediction.confidenceScore}%</p>
                 </div>
                 <div className="flex min-h-32 min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl bg-primary/10 p-5 text-center">
                   <p className="text-sm text-muted">{language === "hi" ? "संक्रमित क्षेत्र" : language === "hinglish" ? "Infected Area" : "Infected Area"}</p>
-                  <p className="mt-2 text-3xl font-bold text-primary">{lastPrediction.infectedArea ?? 0}%</p>
+                  <p className="mt-2 text-2xl font-bold leading-tight text-primary">{lastPrediction.infectedArea ?? 0}%</p>
                 </div>
                 <div className="flex min-h-32 min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl bg-primary/10 p-4 text-center">
                   <p className="text-sm text-muted">{language === "hi" ? "गंभीरता" : language === "hinglish" ? "Severity" : "Severity"}</p>
-                  <p className="mt-2 max-w-full whitespace-nowrap text-center text-xl font-bold leading-none tracking-tight xl:text-[1.35rem] text-yellow-400">{lastPrediction.severity}</p>
+                  <p className="mt-2 max-w-full whitespace-nowrap text-center text-lg font-bold leading-none tracking-tight text-yellow-400 xl:text-xl">{lastPrediction.severity}</p>
                 </div>
               </div>
 
