@@ -8,6 +8,7 @@ import { predictDisease } from "../services/api";
 import { useAppStore } from "../store/useAppStore";
 import { supportedCrops } from "../data/content";
 import { translate } from "../data/translations";
+import { Result } from "./Result";
 
 async function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -34,8 +35,13 @@ export function DetectDisease() {
   const scanDraft = useAppStore((state) => state.scanDraft);
   const setScanDraft = useAppStore((state) => state.setScanDraft);
   const clearScanDraft = useAppStore((state) => state.clearScanDraft);
+  const lastPrediction = useAppStore((state) => state.lastPrediction);
   const navigate = useNavigate();
   const t = (key: string) => translate(language, key);
+
+  if (lastPrediction) {
+    return <Result />;
+  }
 
   const onDrop = useCallback(
     async (files: File[]) => {
