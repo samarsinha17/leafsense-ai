@@ -4,6 +4,7 @@ import { PageShell } from "./components/layout/PageShell";
 import { Logo } from "./components/Logo";
 import { getProfile } from "./services/api";
 import { useAppStore } from "./store/useAppStore";
+import { DetectDisease } from "./pages/DetectDisease";
 
 const Admin = lazy(() => import("./pages/Admin").then((module) => ({ default: module.Admin })));
 const Analytics = lazy(() => import("./pages/Analytics").then((module) => ({ default: module.Analytics })));
@@ -12,7 +13,6 @@ const Auth = lazy(() => import("./pages/Auth").then((module) => ({ default: modu
 const Contact = lazy(() => import("./pages/Contact").then((module) => ({ default: module.Contact })));
 const Dashboard = lazy(() => import("./pages/Dashboard").then((module) => ({ default: module.Dashboard })));
 const Dataset = lazy(() => import("./pages/Dataset").then((module) => ({ default: module.Dataset })));
-const DetectDisease = lazy(() => import("./pages/DetectDisease").then((module) => ({ default: module.DetectDisease })));
 const Home = lazy(() => import("./pages/Home").then((module) => ({ default: module.Home })));
 const Model = lazy(() => import("./pages/Model").then((module) => ({ default: module.Model })));
 const AssistantHistory = lazy(() => import("./pages/AssistantHistory").then((module) => ({ default: module.AssistantHistory })));
@@ -73,6 +73,11 @@ export default function App() {
 
   return (
     <PageShell>
+      <div className={detectVisible ? "" : "hidden"}>
+        <ProtectedRoute>
+          <DetectDisease />
+        </ProtectedRoute>
+      </div>
       <Suspense
         fallback={
           <div className="grid min-h-[60vh] place-items-center">
@@ -80,11 +85,6 @@ export default function App() {
           </div>
         }
       >
-        <div className={detectVisible ? "" : "hidden"}>
-          <ProtectedRoute>
-            <DetectDisease />
-          </ProtectedRoute>
-        </div>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/result" element={<ProtectedRoute><Result /></ProtectedRoute>} />
