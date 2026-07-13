@@ -24,6 +24,11 @@ const Profile = lazy(() => import("./pages/Profile").then((module) => ({ default
 const Research = lazy(() => import("./pages/Research").then((module) => ({ default: module.Research })));
 const Settings = lazy(() => import("./pages/Settings").then((module) => ({ default: module.Settings })));
 
+function DetectEntry() {
+  const lastPrediction = useAppStore((state) => state.lastPrediction);
+  return lastPrediction ? <Result /> : <DetectDisease />;
+}
+
 function ProtectedRoute({ children }: { children: JSX.Element }) {
   const user = useAppStore((state) => state.user);
   const setUser = useAppStore((state) => state.setUser);
@@ -68,16 +73,8 @@ function ProtectedRoute({ children }: { children: JSX.Element }) {
 }
 
 export default function App() {
-  const location = useLocation();
-  const detectVisible = location.pathname === "/detect";
-
   return (
     <PageShell>
-      <div className={detectVisible ? "" : "hidden"}>
-        <ProtectedRoute>
-          <DetectDisease />
-        </ProtectedRoute>
-      </div>
       <Suspense
         fallback={
           <div className="grid min-h-[60vh] place-items-center">
@@ -87,6 +84,7 @@ export default function App() {
       >
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/detect" element={<ProtectedRoute><DetectEntry /></ProtectedRoute>} />
           <Route path="/result" element={<ProtectedRoute><Result /></ProtectedRoute>} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/dataset" element={<ProtectedRoute><Dataset /></ProtectedRoute>} />
