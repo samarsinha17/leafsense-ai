@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { Camera, ChevronDown, Crop, FolderOpen, RotateCcw, ScanLine, UploadCloud, ZoomIn } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -6,9 +6,9 @@ import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { predictDisease } from "../services/api";
 import { useAppStore } from "../store/useAppStore";
-import { cropDataset } from "../data/content";
 import { supportedCrops } from "../data/content";
 import { translate } from "../data/translations";
+import { Result } from "./Result";
 
 async function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -38,9 +38,9 @@ export function DetectDisease() {
   const clearScanDraft = useAppStore((state) => state.clearScanDraft);
   const navigate = useNavigate();
   const t = (key: string) => translate(language, key);
-  const cropInfo = lastPrediction
-    ? cropDataset.find((item) => lastPrediction.cropName.toLowerCase().includes(item.crop.toLowerCase()))
-    : null;
+  if (lastPrediction) {
+    return <Result />;
+  }
 
   const onDrop = useCallback(
     async (files: File[]) => {
@@ -63,15 +63,6 @@ export function DetectDisease() {
     maxFiles: 1,
     noClick: false,
   });
-
-  useEffect(() => {
-    if (scanDraft.imageDataUrl || !lastPrediction?.imageUrl) return;
-    setScanDraft({
-      imageDataUrl: lastPrediction.imageUrl,
-      imageName: `${lastPrediction.cropName}-${lastPrediction.diseaseName}.jpg`,
-      cropHint: lastPrediction.cropName || "auto",
-    });
-  }, [lastPrediction, scanDraft.imageDataUrl, setScanDraft]);
 
   async function analyze() {
     if (!scanDraft.imageDataUrl) return;
@@ -181,80 +172,6 @@ export function DetectDisease() {
               </div>
               <div className="mt-5 h-3 overflow-hidden rounded-full bg-primary/10">
                 <div className="h-full w-2/3 animate-pulse rounded-full bg-primary" />
-              </div>
-            </Card>
-          ) : lastPrediction ? (
-            <Card className="border-primary/70">
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div>
-                  <p className="text-sm font-bold uppercase tracking-[0.18em] text-primary">{t("diagnosticResult")}</p>
-                  <p className="mt-2 text-sm text-muted">{new Date(lastPrediction.timestamp).toLocaleString()}</p>
-                </div>
-                <Button variant="secondary" onClick={() => navigate("/result")}>
-                  {language === "hi" ? "पूर्ण परिणाम" : language === "hinglish" ? "View Full Result" : "View Full Result"}
-                </Button>
-              </div>
-
-              <h2 className="mt-3 font-heading text-4xl font-bold">{lastPrediction.diseaseName}</h2>
-              <p className="mt-2 text-muted">
-                {lastPrediction.scientificName} | {lastPrediction.diseaseCategory} | {lastPrediction.cropName}
-              </p>
-
-              <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                <div className="flex min-h-32 min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl bg-primary/10 p-5 text-center">
-                  <p className="text-sm text-muted">{language === "hi" ? "फसल प्रकार" : language === "hinglish" ? "Crop Type" : "Crop Type"}</p>
-                  <p className="mt-2 break-words text-xl font-bold leading-tight text-primary">{lastPrediction.cropName}</p>
-                </div>
-                <div className="flex min-h-32 min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl bg-primary/10 p-5 text-center">
-                  <p className="text-sm text-muted">{language === "hi" ? "आत्मविश्वास" : language === "hinglish" ? "Confidence" : "Confidence"}</p>
-                  <p className="mt-2 text-2xl font-bold leading-tight text-primary">{lastPrediction.confidenceScore}%</p>
-                </div>
-                <div className="flex min-h-32 min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl bg-primary/10 p-5 text-center">
-                  <p className="text-sm text-muted">{language === "hi" ? "संक्रमित क्षेत्र" : language === "hinglish" ? "Infected Area" : "Infected Area"}</p>
-                  <p className="mt-2 text-2xl font-bold leading-tight text-primary">{lastPrediction.infectedArea ?? 0}%</p>
-                </div>
-                <div className="flex min-h-32 min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl bg-primary/10 p-4 text-center">
-                  <p className="text-sm text-muted">{language === "hi" ? "गंभीरता" : language === "hinglish" ? "Severity" : "Severity"}</p>
-                  <p className="mt-2 max-w-full whitespace-nowrap text-center text-lg font-bold leading-none tracking-tight text-yellow-400 xl:text-xl">{lastPrediction.severity}</p>
-                </div>
-              </div>
-
-              <div className="mt-6 rounded-2xl border border-border p-5">
-                <h3 className="font-semibold">{language === "hi" ? "शीर्ष परिणाम" : language === "hinglish" ? "Top predictions" : "Top predictions"}</h3>
-                <div className="mt-4 grid gap-3">
-                  {(lastPrediction.topPredictions?.length ? lastPrediction.topPredictions : [{ label: lastPrediction.diseaseName, value: lastPrediction.confidenceScore }]).slice(0, 5).map((item) => (
-                    <div key={item.label}>
-                      <div className="flex justify-between gap-3 text-sm">
-                        <span>{item.label}</span>
-                        <span className="font-semibold text-primary">{item.value}%</span>
-                      </div>
-                      <div className="mt-1 h-2 overflow-hidden rounded-full bg-primary/10">
-                        <div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(Number(item.value), 100)}%` }} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <p className="mt-6 leading-7 text-muted">{lastPrediction.recommendation.explanation}</p>
-              <div className="mt-8 grid gap-4 md:grid-cols-2">
-                {[
-                  [language === "hi" ? "लक्षण" : language === "hinglish" ? "Symptoms" : "Symptoms", lastPrediction.recommendation.symptoms],
-                  [language === "hi" ? "कारण" : language === "hinglish" ? "Causes" : "Causes", lastPrediction.recommendation.causes],
-                  [language === "hi" ? "तुरंत कदम" : language === "hinglish" ? "Immediate Actions" : "Immediate Actions", lastPrediction.recommendation.immediateActions],
-                  [language === "hi" ? "जैविक उपचार" : language === "hinglish" ? "Organic Treatment" : "Organic Treatment", lastPrediction.recommendation.organicTreatment],
-                  [language === "hi" ? "रासायनिक उपचार" : language === "hinglish" ? "Chemical Treatment" : "Chemical Treatment", lastPrediction.recommendation.chemicalTreatment],
-                  [language === "hi" ? "रोकथाम उपाय" : language === "hinglish" ? "Preventive Measures" : "Preventive Measures", lastPrediction.recommendation.preventiveMeasures],
-                ].map(([title, items]) => (
-                  <div key={title as string}>
-                    <h3 className="font-semibold">{title as string}</h3>
-                    <ul className="mt-2 space-y-1 text-sm text-muted">
-                      {(items as string[]).map((item) => (
-                        <li key={item}>{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
               </div>
             </Card>
           ) : (

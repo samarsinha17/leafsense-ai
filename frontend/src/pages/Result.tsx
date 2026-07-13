@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Bot, Download, FileDown, Mail, PlusCircle, Share2 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { cropDataset } from "../data/content";
@@ -14,6 +14,8 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 export function Result() {
   const storedResult = useAppStore((state) => state.lastPrediction);
+  const setLastPrediction = useAppStore((state) => state.setLastPrediction);
+  const clearScanDraft = useAppStore((state) => state.clearScanDraft);
   const setAssistantContext = useAppStore((state) => state.setAssistantContext);
   const language = useAppStore((state) => state.language);
   const t = (key: string) => translate(language, key);
@@ -176,11 +178,17 @@ export function Result() {
               <p className="text-sm font-bold uppercase tracking-[0.18em] text-primary">{language === "hi" ? "डायग्नोस्टिक परिणाम" : language === "hinglish" ? "Diagnostic Result" : "Diagnostic Result"}</p>
               <p className="mt-2 text-sm text-muted">{new Date(result.timestamp).toLocaleString()}</p>
             </div>
-            <Link to="/detect">
-              <Button variant="secondary">
-                <PlusCircle size={17} /> {language === "hi" ? "नया स्कैन" : language === "hinglish" ? "New Scan" : "New Scan"}
-              </Button>
-            </Link>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                clearScanDraft();
+                setAssistantContext(null);
+                setLastPrediction(null);
+                navigate("/detect");
+              }}
+            >
+              <PlusCircle size={17} /> {language === "hi" ? "नया स्कैन" : language === "hinglish" ? "New Scan" : "New Scan"}
+            </Button>
           </div>
 
           <h1 className="mt-3 font-heading text-4xl font-bold">{result.diseaseName}</h1>
