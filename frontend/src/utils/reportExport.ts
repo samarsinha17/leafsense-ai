@@ -283,14 +283,13 @@ export async function exportDiagnosticPdf(result: PredictionResult, cropFacts: s
   outline(intelligence, 36, 350, 770, 155, [247, 252, 248]);
   text(intelligence, result.diseaseName, 56, 470, 22, true, [0, 83, 45]);
   text(intelligence, `${result.scientificName} | ${result.diseaseCategory}`, 56, 445, 11, true, [71, 85, 105]);
-  wrapText(intelligence, rec.explanation, 56, 415, 112, 11, false, [31, 41, 55], 4);
-  outline(intelligence, 36, 225, 770, 105, [248, 250, 252]);
-  text(intelligence, "Clinical Interpretation", 56, 296, 12, true, [0, 83, 45]);
-  wrapText(intelligence, `The model flags this case as ${result.severity.toLowerCase()} risk with ${confidenceBand(result.confidenceScore).toLowerCase()} confidence. Use the image, symptoms, and field history together before taking action.`, 56, 277, 116, 9, false, [51, 65, 85], 3);
-  text(intelligence, "Confirm in Field", 320, 296, 12, true, [0, 83, 45]);
-  wrapText(intelligence, "Check older leaves, leaf underside, lesion spread, moisture patterns, and whether nearby plants show the same pattern.", 320, 277, 116, 9, false, [51, 65, 85], 3);
-  text(intelligence, "Monitor Next", 580, 296, 12, true, [0, 83, 45]);
-  wrapText(intelligence, result.severity === "Critical" || result.severity === "High" ? "Re-scan within 24-72 hours and isolate suspect material until symptoms stabilize." : "Re-scan in the next monitoring cycle and watch for lesion expansion, color change, or mildew growth.", 580, 277, 108, 9, false, [51, 65, 85], 3);
+  wrapText(intelligence, rec.explanation, 56, 415, 112, 11, false, [31, 41, 55], 3);
+  ["Field check: inspect lesion spread and underside symptoms", "Action: isolate affected tissue and track nearby plants", result.severity === "Critical" || result.severity === "High" ? "Timing: re-scan within 24-72 hours" : "Timing: re-scan during the next monitoring cycle"].forEach((note, index) => {
+    const x = 56 + index * 240;
+    rect(intelligence, x, 365, 220, 42, index === 0 ? [236, 253, 245] : index === 1 ? [247, 252, 248] : [239, 246, 255]);
+    text(intelligence, note.split(":")[0], x + 12, 390, 9, true, [0, 83, 45]);
+    wrapText(intelligence, note.split(":")[1].trim(), x + 12, 377, 30, 8.5, false, [51, 65, 85], 2);
+  });
   [["Symptoms", [
     ...rec.symptoms.slice(0, 4),
     "Visible on leaves, petioles, or nearby tissue",
@@ -322,13 +321,15 @@ export async function exportDiagnosticPdf(result: PredictionResult, cropFacts: s
     "Label the plant and track progress after treatment",
     "Keep the canopy dry after intervention",
   ], [254, 226, 226]], ["Organic Treatment", [
-    ...rec.organicTreatment.slice(0, 4),
-    "Reapply only if conditions remain favorable for disease",
+    "Use neem or copper-based treatment where appropriate",
+    "Apply compost tea only if recommended by an expert",
+    "Reapply only if disease pressure remains high",
     "Prioritize organic options in early or moderate cases",
   ], [236, 253, 245]], ["Chemical Treatment", [
-    ...rec.chemicalTreatment.slice(0, 4),
+    "Use approved fungicide or bactericide per label",
     "Follow local label rates and re-entry intervals",
-    "Use rotation to reduce resistance pressure",
+    "Rotate chemistry to reduce resistance pressure",
+    "Consult local extension guidance if uncertain",
   ], [239, 246, 255]], ["Prevention Plan", [
     ...rec.preventiveMeasures.slice(0, 4),
     "Monitor adjacent plants for early spread",
@@ -339,7 +340,7 @@ export async function exportDiagnosticPdf(result: PredictionResult, cropFacts: s
     outline(treatment, x, y, 380, 190, fill as [number, number, number]);
     text(treatment, String(title), x + 18, y + 154, 14, true, index === 0 ? risk : [0, 83, 45]);
     text(treatment, index === 0 ? "Priority: stabilize quickly" : index === 1 ? "Priority: reduce inoculum naturally" : index === 2 ? "Priority: use approved control safely" : "Priority: prevent recurrence", x + 18, y + 133, 9, true, [71, 85, 105]);
-    (items as string[]).slice(0, 6).forEach((item, line) => wrapText(treatment, `- ${item}`, x + 20, y + 113 - line * 23, 54, 8.5, false, [51, 65, 85], 2));
+    (items as string[]).slice(0, 6).forEach((item, line) => wrapText(treatment, `- ${item}`, x + 20, y + 113 - line * 24, 58, 8, false, [51, 65, 85], 2));
   });
   footer(treatment, 5, "LeafSense AI Treatment Plan");
   pages.push({ ops: treatment });

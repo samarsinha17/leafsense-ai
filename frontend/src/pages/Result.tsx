@@ -203,7 +203,7 @@ export function Result() {
             </div>
             <div className="flex min-h-32 min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl bg-primary/10 p-5 text-center">
               <p className="text-sm text-muted">{language === "hi" ? "गंभीरता" : language === "hinglish" ? "Severity" : "Severity"}</p>
-              <p className={`mt-2 max-w-full break-words text-center text-2xl font-bold leading-tight xl:text-[1.75rem] ${severityClass}`}>{result.severity}</p>
+              <p className={`mt-2 max-w-full whitespace-nowrap text-center text-[1.45rem] font-bold leading-none tracking-tight xl:text-[1.7rem] ${severityClass}`}>{result.severity}</p>
             </div>
           </div>
 
