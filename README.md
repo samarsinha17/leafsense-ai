@@ -11,6 +11,7 @@ LeafSense AI is an AI-powered plant disease detection and agricultural intellige
 * Image preprocessing and segmentation
 * Heatmap visualization for affected regions
 * AI-assisted agricultural recommendations
+* Sitewide language selector with English, Hindi, and Hinglish support
 * User authentication with Google OAuth
 * Role-based access control
 * Analytics dashboard
@@ -230,6 +231,18 @@ VITE_GOOGLE_CLIENT_ID=YOUR_GOOGLE_CLIENT_ID
 LeafSense AI supports integration with external AI providers through environment variables.
 
 When AI provider credentials are unavailable, the platform gracefully falls back to built-in recommendation logic to maintain core functionality.
+
+---
+
+## Language Support
+
+The frontend includes a sitewide language selector so the interface can switch between:
+
+* English
+* Hindi
+* Hinglish
+
+Brand name, logo, and other project identity elements remain unchanged.
 
 ---
 
