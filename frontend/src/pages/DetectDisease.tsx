@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { Camera, ChevronDown, Crop, FolderOpen, RotateCcw, ScanLine, UploadCloud, ZoomIn } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -31,6 +31,7 @@ export function DetectDisease() {
   const language = useAppStore((state) => state.language);
   const setLastPrediction = useAppStore((state) => state.setLastPrediction);
   const setAssistantContext = useAppStore((state) => state.setAssistantContext);
+  const lastPrediction = useAppStore((state) => state.lastPrediction);
   const scanDraft = useAppStore((state) => state.scanDraft);
   const setScanDraft = useAppStore((state) => state.setScanDraft);
   const clearScanDraft = useAppStore((state) => state.clearScanDraft);
@@ -58,6 +59,15 @@ export function DetectDisease() {
     maxFiles: 1,
     noClick: false,
   });
+
+  useEffect(() => {
+    if (scanDraft.imageDataUrl || !lastPrediction?.imageUrl) return;
+    setScanDraft({
+      imageDataUrl: lastPrediction.imageUrl,
+      imageName: `${lastPrediction.cropName}-${lastPrediction.diseaseName}.jpg`,
+      cropHint: lastPrediction.cropName || "auto",
+    });
+  }, [lastPrediction, scanDraft.imageDataUrl, setScanDraft]);
 
   async function analyze() {
     if (!scanDraft.imageDataUrl) return;

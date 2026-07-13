@@ -77,7 +77,11 @@ export const useAppStore = create<AppState>()(
     {
       name: "leafsense-scan-draft",
       storage: createJSONStorage(() => sessionStorage),
-      partialize: (state) => ({ scanDraft: state.scanDraft }),
+      partialize: (state) => ({
+        scanDraft: state.scanDraft,
+        lastPrediction: state.lastPrediction,
+        assistantContext: state.assistantContext,
+      }),
     },
   ),
 );
