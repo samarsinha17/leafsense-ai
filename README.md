@@ -67,7 +67,6 @@ LeafSense-AI/
 |-- deployment/
 |-- docs/
 |-- hf_space/
-|-- ProjectReport/
 `-- tools/
 ```
 
