@@ -309,7 +309,7 @@ LeafSense AI is being developed as a final-year B.Tech Computer Science Engineer
 
 ## License
 
-This project is intended for educational, research, and demonstration purposes.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for full terms.
 
 ---
 
