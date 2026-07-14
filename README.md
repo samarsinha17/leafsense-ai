@@ -11,6 +11,7 @@ LeafSense AI is an AI-powered plant disease detection and agricultural intellige
 * Image preprocessing and segmentation
 * Heatmap visualization for affected regions
 * AI-assisted agricultural recommendations
+* Persisted Detect Disease workflow that restores completed scans after navigation
 * Sitewide language selector with English, Hindi, and Hinglish support
 * User authentication with Google OAuth
 * Role-based access control
@@ -28,7 +29,6 @@ LeafSense AI is an AI-powered plant disease detection and agricultural intellige
 * TypeScript
 * Vite
 * Tailwind CSS
-* Framer Motion
 * Zustand
 * Recharts
 * Axios
@@ -61,12 +61,14 @@ LeafSense AI is an AI-powered plant disease detection and agricultural intellige
 
 ```text
 LeafSense-AI/
-├── frontend/
-├── backend/
-├── dataset/
-├── deployment/
-├── docs/
-└── tools/
+|-- frontend/
+|-- backend/
+|-- dataset/
+|-- deployment/
+|-- docs/
+|-- hf_space/
+|-- ProjectReport/
+`-- tools/
 ```
 
 ---
@@ -178,6 +180,17 @@ VITE_API_URL=
 VITE_GOOGLE_CLIENT_ID=YOUR_GOOGLE_CLIENT_ID
 ```
 
+### Hugging Face Space
+
+```text
+HF_TOKEN=
+HUGGINGFACE_MODEL_REPO=samarsinha2517/leafsense-ai-model
+HUGGINGFACE_MODEL_FILE=leafsense_model.keras
+HUGGINGFACE_LABELS_FILE=labels.json
+HUGGINGFACE_SPACE_URL=https://samarsinha2517-leafsense-ai-model.hf.space
+HUGGINGFACE_SPACE_ENDPOINT=/predict
+```
+
 ---
 
 ## Production Deployment
@@ -231,6 +244,16 @@ VITE_GOOGLE_CLIENT_ID=YOUR_GOOGLE_CLIENT_ID
 LeafSense AI supports integration with external AI providers through environment variables.
 
 When AI provider credentials are unavailable, the platform gracefully falls back to built-in recommendation logic to maintain core functionality.
+
+## Detect Disease Workflow
+
+The Detect Disease page now restores the completed scan after navigation.
+
+* Upload a leaf image
+* Click Analyze Plant
+* View the result immediately
+* Switch to another page and come back without losing the scan
+* Use New Scan only when you want to start over
 
 ---
 
